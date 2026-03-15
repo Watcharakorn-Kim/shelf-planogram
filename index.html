@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shelf Planogram — Fastener Store</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --sidebar:340px;
+  --bg:#1a1d23;
+  --panel:#23272e;
+  --border:#353a44;
+  --accent:#4e8cff;
+  --accent2:#38c76d;
+  --text:#e4e6ea;
+  --text2:#9a9fb0;
+  --danger:#e84855;
+}
+html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+#app{display:flex;height:100vh}
+
+/* ── Sidebar ── */
+#sidebar{width:var(--sidebar);min-width:var(--sidebar);background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:10}
+#sidebar h2{padding:16px 18px 8px;font-size:14px;text-transform:uppercase;letter-spacing:1px;color:var(--text2)}
+#search{margin:6px 14px 10px;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:#1a1d23;color:var(--text);font-size:13px;outline:none}
+#search:focus{border-color:var(--accent)}
+#category-filter{margin:0 14px 10px;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:#1a1d23;color:var(--text);font-size:13px;outline:none}
+
+#product-list{flex:1;overflow-y:auto;padding:4px 10px}
+.product-card{background:#1a1d23;border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;cursor:grab;transition:.15s}
+.product-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.product-card.selected{border-color:var(--accent);box-shadow:0 0 0 2px rgba(78,140,255,.3)}
+.product-card .p-name{font-size:13px;font-weight:600;margin-bottom:3px}
+.product-card .p-meta{font-size:11px;color:var(--text2);line-height:1.5}
+.product-card .p-price{font-size:13px;font-weight:700;color:var(--accent2);margin-top:4px}
+.product-card .p-size{font-size:10px;color:var(--text2);background:#2a2e36;padding:2px 6px;border-radius:4px;display:inline-block;margin-top:4px}
+
+/* ── Order Panel ── */
+#order-panel{border-top:1px solid var(--border);max-height:260px;overflow-y:auto;padding:10px 14px}
+#order-panel h3{font-size:13px;color:var(--text2);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+#order-panel h3 span{color:var(--accent2);font-size:15px}
+.order-item{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border)}
+.order-item .oi-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.order-item .oi-qty{margin:0 8px;color:var(--accent);min-width:30px;text-align:center}
+.order-item .oi-price{min-width:60px;text-align:right;color:var(--accent2)}
+
+/* ── Canvas ── */
+#canvas-wrap{flex:1;position:relative}
+canvas{display:block;width:100%;height:100%}
+
+/* ── Toolbar ── */
+#toolbar{position:absolute;top:14px;left:14px;display:flex;gap:8px;z-index:5}
+#toolbar button,.tool-btn{padding:8px 14px;border-radius:6px;border:1px solid var(--border);background:var(--panel);color:var(--text);font-size:12px;cursor:pointer;transition:.15s;font-family:inherit}
+#toolbar button:hover,.tool-btn:hover{border-color:var(--accent);background:#2a2e36}
+#toolbar button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* ── Info tooltip ── */
+#info-tooltip{position:absolute;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-size:12px;pointer-events:none;display:none;z-index:20;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+#info-tooltip .it-name{font-size:14px;font-weight:700;margin-bottom:4px}
+#info-tooltip .it-row{color:var(--text2);line-height:1.8}
+
+/* ── Shelf config modal ── */
+#shelf-config{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:24px 28px;z-index:30;display:none;min-width:320px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+#shelf-config h3{margin-bottom:16px;font-size:16px}
+#shelf-config label{display:block;font-size:13px;color:var(--text2);margin-bottom:4px;margin-top:12px}
+#shelf-config input,#shelf-config select{width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:#1a1d23;color:var(--text);font-size:13px;outline:none}
+#shelf-config .btn-row{margin-top:20px;display:flex;gap:10px;justify-content:flex-end}
+#shelf-config .btn-row button{padding:8px 20px;border-radius:6px;border:1px solid var(--border);background:var(--accent);color:#fff;cursor:pointer;font-size:13px;font-family:inherit}
+#shelf-config .btn-row button.cancel{background:transparent;color:var(--text)}
+
+/* ── Status bar ── */
+#status-bar{position:absolute;bottom:14px;left:14px;font-size:11px;color:var(--text2);background:var(--panel);padding:6px 14px;border-radius:6px;border:1px solid var(--border);z-index:5}
+
+/* ── Ghost preview ── */
+#ghost-label{position:absolute;pointer-events:none;font-size:11px;color:var(--accent);background:rgba(30,33,40,.85);padding:3px 8px;border-radius:4px;display:none;z-index:15;white-space:nowrap}
+
+/* scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <h2>Product Catalog</h2>
+    <input id="search" type="text" placeholder="Search products...">
+    <select id="category-filter"><option value="">All Categories</option></select>
+    <div id="product-list"></div>
+    <div id="order-panel">
+      <h3>Order Summary <span id="order-total">$0.00</span></h3>
+      <div id="order-items"></div>
+    </div>
+  </div>
+
+  <!-- 3D Canvas -->
+  <div id="canvas-wrap">
+    <div id="toolbar">
+      <button onclick="addShelfUnit()" title="Add shelf unit">+ Shelf Unit</button>
+      <button onclick="openShelfConfig()" title="Configure shelf">Config Shelf</button>
+      <button onclick="deleteSelected()" title="Remove selected product">Delete</button>
+      <button onclick="clearAllProducts()" title="Clear all products">Clear All</button>
+      <button onclick="saveLayout()" title="Save layout">Save</button>
+      <button onclick="loadLayout()" title="Load layout">Load</button>
+      <button onclick="exportOrder()" title="Export order">Export Order</button>
+    </div>
+    <canvas id="c"></canvas>
+    <div id="info-tooltip"></div>
+    <div id="ghost-label"></div>
+    <div id="status-bar">Click a product then click on shelf to place. Right-drag to rotate. Scroll to zoom.</div>
+
+    <!-- Shelf config modal -->
+    <div id="shelf-config">
+      <h3>Shelf Unit Configuration</h3>
+      <label>Number of Levels</label>
+      <input id="cfg-levels" type="number" value="5" min="2" max="12">
+      <label>Shelf Depth (m)</label>
+      <input id="cfg-depth" type="number" value="0.5" step="0.05" min="0.3" max="1.0">
+      <label>Shelf Color</label>
+      <select id="cfg-color">
+        <option value="#777f8e">Steel Grey</option>
+        <option value="#4a6fa5">Blue</option>
+        <option value="#5a8a5e">Green</option>
+        <option value="#8a6b4a">Brown</option>
+      </select>
+      <div class="btn-row">
+        <button class="cancel" onclick="closeShelfConfig()">Cancel</button>
+        <button onclick="applyShelfConfig()">Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+// ═══════════════════════════════════════════
+//  SAMPLE PRODUCT DATA
+// ═══════════════════════════════════════════
+const PRODUCTS = [
+  // Bolts
+  {id:1, name:"M6×20 Hex Bolt DIN933",         barcode:"4901001001",category:"Bolts",     packType:"Box 200pcs",  price:12.50, w:0.15,h:0.08,d:0.10,color:"#6a9fd8"},
+  {id:2, name:"M8×30 Hex Bolt DIN933",         barcode:"4901001002",category:"Bolts",     packType:"Box 100pcs",  price:15.80, w:0.18,h:0.10,d:0.12,color:"#5b8ec4"},
+  {id:3, name:"M10×40 Hex Bolt DIN933",        barcode:"4901001003",category:"Bolts",     packType:"Box 50pcs",   price:18.50, w:0.20,h:0.12,d:0.14,color:"#4c7db0"},
+  {id:4, name:"M12×50 Hex Bolt DIN933",        barcode:"4901001004",category:"Bolts",     packType:"Box 25pcs",   price:22.00, w:0.22,h:0.14,d:0.15,color:"#3d6c9c"},
+  {id:5, name:"M6×25 Carriage Bolt",           barcode:"4901001005",category:"Bolts",     packType:"Box 200pcs",  price:14.00, w:0.15,h:0.08,d:0.10,color:"#7ab0e8"},
+  {id:6, name:"M8×40 Flange Bolt",             barcode:"4901001006",category:"Bolts",     packType:"Box 100pcs",  price:19.50, w:0.18,h:0.10,d:0.12,color:"#6aa0d8"},
+
+  // Nuts
+  {id:7, name:"M6 Hex Nut DIN934",             barcode:"4901002001",category:"Nuts",      packType:"Box 500pcs",  price:8.50,  w:0.12,h:0.06,d:0.08,color:"#d8a06a"},
+  {id:8, name:"M8 Hex Nut DIN934",             barcode:"4901002002",category:"Nuts",      packType:"Box 250pcs",  price:10.20, w:0.14,h:0.07,d:0.09,color:"#c89050"},
+  {id:9, name:"M10 Hex Nut DIN934",            barcode:"4901002003",category:"Nuts",      packType:"Box 100pcs",  price:11.80, w:0.15,h:0.08,d:0.10,color:"#b88040"},
+  {id:10,name:"M8 Nylon Lock Nut",             barcode:"4901002004",category:"Nuts",      packType:"Box 200pcs",  price:14.50, w:0.14,h:0.07,d:0.09,color:"#e8b07a"},
+  {id:11,name:"M10 Flange Nut",                barcode:"4901002005",category:"Nuts",      packType:"Box 100pcs",  price:13.00, w:0.15,h:0.08,d:0.10,color:"#d8a060"},
+
+  // Screws
+  {id:12,name:"4×40mm Wood Screw PH",          barcode:"4901003001",category:"Screws",    packType:"Box 500pcs",  price:9.80,  w:0.16,h:0.08,d:0.10,color:"#8ad86a"},
+  {id:13,name:"5×50mm Wood Screw PH",          barcode:"4901003002",category:"Screws",    packType:"Box 250pcs",  price:11.50, w:0.18,h:0.09,d:0.11,color:"#7ac85a"},
+  {id:14,name:"4.2×19 Self-Tapping Screw",     barcode:"4901003003",category:"Screws",    packType:"Box 1000pcs", price:16.00, w:0.14,h:0.10,d:0.10,color:"#6ab84a"},
+  {id:15,name:"4.8×25 Self-Drilling Tek Screw", barcode:"4901003004",category:"Screws",    packType:"Box 500pcs",  price:22.50, w:0.16,h:0.10,d:0.12,color:"#5aa83a"},
+  {id:16,name:"6×40mm Chipboard Screw",        barcode:"4901003005",category:"Screws",    packType:"Box 200pcs",  price:10.80, w:0.17,h:0.09,d:0.11,color:"#8ae86a"},
+  {id:17,name:"M6×16 Socket Head Cap Screw",   barcode:"4901003006",category:"Screws",    packType:"Box 100pcs",  price:13.50, w:0.12,h:0.07,d:0.08,color:"#4a982a"},
+
+  // Washers
+  {id:18,name:"M6 Flat Washer DIN125",         barcode:"4901004001",category:"Washers",   packType:"Box 1000pcs", price:6.50,  w:0.10,h:0.05,d:0.08,color:"#d8d86a"},
+  {id:19,name:"M8 Flat Washer DIN125",         barcode:"4901004002",category:"Washers",   packType:"Box 500pcs",  price:7.80,  w:0.12,h:0.06,d:0.09,color:"#c8c85a"},
+  {id:20,name:"M10 Flat Washer DIN125",        barcode:"4901004003",category:"Washers",   packType:"Box 250pcs",  price:9.00,  w:0.13,h:0.06,d:0.10,color:"#b8b84a"},
+  {id:21,name:"M8 Spring Washer DIN127",       barcode:"4901004004",category:"Washers",   packType:"Box 500pcs",  price:8.50,  w:0.12,h:0.06,d:0.09,color:"#e8e87a"},
+
+  // Anchors
+  {id:22,name:"M8×60 Wedge Anchor",            barcode:"4901005001",category:"Anchors",   packType:"Box 50pcs",   price:28.00, w:0.22,h:0.12,d:0.14,color:"#d86a8a"},
+  {id:23,name:"M10×80 Wedge Anchor",           barcode:"4901005002",category:"Anchors",   packType:"Box 25pcs",   price:35.00, w:0.24,h:0.14,d:0.16,color:"#c85a7a"},
+  {id:24,name:"6×30 Plastic Plug Anchor",      barcode:"4901005003",category:"Anchors",   packType:"Box 500pcs",  price:7.50,  w:0.14,h:0.08,d:0.10,color:"#e87a9a"},
+  {id:25,name:"8×40 Nylon Hammer Anchor",      barcode:"4901005004",category:"Anchors",   packType:"Box 200pcs",  price:18.00, w:0.16,h:0.10,d:0.12,color:"#d86a90"},
+
+  // Rivets & Pins
+  {id:26,name:"4×10mm Blind Rivet Aluminium",  barcode:"4901006001",category:"Rivets",    packType:"Box 1000pcs", price:12.00, w:0.12,h:0.06,d:0.08,color:"#b06ad8"},
+  {id:27,name:"4.8×16mm Blind Rivet Steel",    barcode:"4901006002",category:"Rivets",    packType:"Box 500pcs",  price:15.50, w:0.14,h:0.07,d:0.09,color:"#a05ac8"},
+  {id:28,name:"3×20mm Split Pin",              barcode:"4901006003",category:"Rivets",    packType:"Box 500pcs",  price:6.80,  w:0.10,h:0.05,d:0.07,color:"#c07ae8"},
+
+  // Threaded Rod & Accessories
+  {id:29,name:"M8×1000 Threaded Rod Grade 8.8",barcode:"4901007001",category:"Rods",      packType:"Bundle 10pcs",price:32.00, w:0.10,h:0.10,d:1.02,color:"#6ad8d8"},
+  {id:30,name:"M10×1000 Threaded Rod Grade 4.8",barcode:"4901007002",category:"Rods",     packType:"Bundle 10pcs",price:28.00, w:0.12,h:0.12,d:1.02,color:"#5ac8c8"},
+  {id:31,name:"M12×1000 Threaded Rod Grade 8.8",barcode:"4901007003",category:"Rods",     packType:"Bundle 5pcs", price:38.00, w:0.14,h:0.14,d:1.02,color:"#4ab8b8"},
+
+  // Hooks & Eye Bolts
+  {id:32,name:"M8 Eye Bolt DIN580",            barcode:"4901008001",category:"Specialty", packType:"Box 25pcs",   price:24.00, w:0.15,h:0.08,d:0.10,color:"#d8d06a"},
+  {id:33,name:"6×60mm Hook Bolt",              barcode:"4901008002",category:"Specialty", packType:"Box 50pcs",   price:18.50, w:0.16,h:0.09,d:0.11,color:"#c8c05a"},
+  {id:34,name:"M6 Wing Nut DIN315",            barcode:"4901008003",category:"Specialty", packType:"Box 100pcs",  price:11.00, w:0.12,h:0.06,d:0.08,color:"#e8e07a"},
+  {id:35,name:"M8 Coupling Nut DIN6334",       barcode:"4901008004",category:"Specialty", packType:"Box 50pcs",   price:16.50, w:0.13,h:0.07,d:0.09,color:"#d8d06a"},
+];
+
+// ═══════════════════════════════════════════
+//  THREE.JS SCENE SETUP
+// ═══════════════════════════════════════════
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.setClearColor(0x1a1d23);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x1a1d23, 8, 25);
+
+const camera = new THREE.PerspectiveCamera(50, 1, 0.05, 50);
+camera.position.set(2.5, 1.8, 3.5);
+
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.target.set(0.6, 1.1, 0);
+controls.mouseButtons = {LEFT:THREE.MOUSE.LEFT, MIDDLE:THREE.MOUSE.MIDDLE, RIGHT:THREE.MOUSE.RIGHT};
+// We'll handle left-click ourselves; orbit on right-click
+controls.mouseButtons.LEFT = null;
+controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
+controls.mouseButtons.MIDDLE = THREE.MOUSE.PAN;
+
+// Lights
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(ambientLight);
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+dirLight.position.set(3, 5, 4);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.set(2048, 2048);
+dirLight.shadow.camera.near = 0.5;
+dirLight.shadow.camera.far = 20;
+dirLight.shadow.camera.left = -5;
+dirLight.shadow.camera.right = 5;
+dirLight.shadow.camera.top = 5;
+dirLight.shadow.camera.bottom = -1;
+scene.add(dirLight);
+scene.add(new THREE.DirectionalLight(0x8899bb, 0.3).translateX(-3).translateY(2).translateZ(-2));
+
+// Floor grid
+const gridHelper = new THREE.GridHelper(20, 40, 0x353a44, 0x2a2e36);
+scene.add(gridHelper);
+
+// Floor
+const floorGeo = new THREE.PlaneGeometry(20, 20);
+const floorMat = new THREE.MeshStandardMaterial({color:0x1e2128, roughness:0.9});
+const floor = new THREE.Mesh(floorGeo, floorMat);
+floor.rotation.x = -Math.PI/2;
+floor.position.y = -0.001;
+floor.receiveShadow = true;
+scene.add(floor);
+
+// ═══════════════════════════════════════════
+//  SHELF MANAGEMENT
+// ═══════════════════════════════════════════
+const SHELF_WIDTH = 1.2;   // meters
+const SHELF_HEIGHT = 2.3;
+const SHELF_POST_THICKNESS = 0.04;
+
+let shelfUnits = [];        // array of shelf unit objects
+let placedProducts = [];    // array of placed product meshes
+let selectedProduct = null; // catalog product currently selected
+let selectedPlaced = null;  // placed product currently selected
+let hoveredPlaced = null;
+let ghostMesh = null;
+let shelfIdCounter = 0;
+
+function createShelfUnit(x = 0, z = 0, levels = 5, depth = 0.5, color = 0x777f8e) {
+  const group = new THREE.Group();
+  group.position.set(x, 0, z);
+  const id = shelfIdCounter++;
+
+  const postMat = new THREE.MeshStandardMaterial({color, roughness:0.5, metalness:0.6});
+  const shelfMat = new THREE.MeshStandardMaterial({color:0x555d6e, roughness:0.6, metalness:0.4});
+
+  // 4 vertical posts
+  const postGeo = new THREE.BoxGeometry(SHELF_POST_THICKNESS, SHELF_HEIGHT, SHELF_POST_THICKNESS);
+  const positions = [
+    [-SHELF_WIDTH/2 + 0.02, SHELF_HEIGHT/2, -depth/2 + 0.02],
+    [SHELF_WIDTH/2 - 0.02, SHELF_HEIGHT/2, -depth/2 + 0.02],
+    [-SHELF_WIDTH/2 + 0.02, SHELF_HEIGHT/2, depth/2 - 0.02],
+    [SHELF_WIDTH/2 - 0.02, SHELF_HEIGHT/2, depth/2 - 0.02],
+  ];
+  positions.forEach(p => {
+    const post = new THREE.Mesh(postGeo, postMat);
+    post.position.set(...p);
+    post.castShadow = true;
+    post.receiveShadow = true;
+    group.add(post);
+  });
+
+  // Shelf platforms
+  const shelfThickness = 0.02;
+  const usableWidth = SHELF_WIDTH - SHELF_POST_THICKNESS * 2 - 0.02;
+  const usableDepth = depth - SHELF_POST_THICKNESS * 2 - 0.02;
+  const shelfGeo = new THREE.BoxGeometry(SHELF_WIDTH - 0.01, shelfThickness, depth - 0.01);
+  const shelfSurfaces = [];
+
+  for (let i = 0; i <= levels; i++) {
+    const y = (i / levels) * (SHELF_HEIGHT - 0.04) + 0.02;
+    const shelf = new THREE.Mesh(shelfGeo, shelfMat.clone());
+    shelf.position.set(0, y, 0);
+    shelf.castShadow = true;
+    shelf.receiveShadow = true;
+    shelf.userData = {isShelfSurface: true, shelfUnitId: id, level: i, y: y + shelfThickness/2};
+    group.add(shelf);
+    shelfSurfaces.push(shelf);
+  }
+
+  // Back panel (thin)
+  const backGeo = new THREE.BoxGeometry(SHELF_WIDTH - 0.01, SHELF_HEIGHT - 0.02, 0.005);
+  const backMat = new THREE.MeshStandardMaterial({color:0x3a3f4a, roughness:0.8, metalness:0.2, transparent:true, opacity:0.5});
+  const back = new THREE.Mesh(backGeo, backMat);
+  back.position.set(0, SHELF_HEIGHT/2, -depth/2 + 0.005);
+  group.add(back);
+
+  // Label
+  const labelCanvas = document.createElement('canvas');
+  labelCanvas.width = 256; labelCanvas.height = 64;
+  const ctx2 = labelCanvas.getContext('2d');
+  ctx2.fillStyle = '#23272e';
+  ctx2.fillRect(0,0,256,64);
+  ctx2.fillStyle = '#e4e6ea';
+  ctx2.font = 'bold 24px sans-serif';
+  ctx2.textAlign = 'center';
+  ctx2.fillText(`Shelf Unit ${id + 1}`, 128, 40);
+  const labelTex = new THREE.CanvasTexture(labelCanvas);
+  const labelGeo = new THREE.PlaneGeometry(0.5, 0.12);
+  const labelMat2 = new THREE.MeshBasicMaterial({map:labelTex, transparent:true});
+  const label = new THREE.Mesh(labelGeo, labelMat2);
+  label.position.set(0, SHELF_HEIGHT + 0.1, 0);
+  group.add(label);
+
+  scene.add(group);
+
+  const unit = {id, group, levels, depth, color, x, z, shelfSurfaces, usableWidth, usableDepth};
+  shelfUnits.push(unit);
+  return unit;
+}
+
+// Create initial shelf units
+createShelfUnit(0, 0, 5, 0.5);
+createShelfUnit(SHELF_WIDTH + 0.05, 0, 5, 0.5);
+createShelfUnit((SHELF_WIDTH + 0.05)*2, 0, 5, 0.5);
+
+function addShelfUnit() {
+  const lastUnit = shelfUnits[shelfUnits.length - 1];
+  const x = lastUnit ? lastUnit.x + SHELF_WIDTH + 0.05 : 0;
+  createShelfUnit(x, 0, 5, 0.5);
+  updateStatus(`Added shelf unit ${shelfUnits.length}`);
+}
+
+// ═══════════════════════════════════════════
+//  PRODUCT PLACEMENT
+// ═══════════════════════════════════════════
+function createProductMesh(product) {
+  const geo = new THREE.BoxGeometry(product.w, product.h, product.d);
+  const mat = new THREE.MeshStandardMaterial({color:product.color, roughness:0.6, metalness:0.2});
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+
+  // Label on front face
+  const labelCanvas = document.createElement('canvas');
+  const cw = 256, ch = 128;
+  labelCanvas.width = cw; labelCanvas.height = ch;
+  const ctx = labelCanvas.getContext('2d');
+  ctx.fillStyle = 'rgba(0,0,0,0.65)';
+  ctx.fillRect(0,0,cw,ch);
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 18px sans-serif';
+  ctx.textAlign = 'center';
+  // Wrap name
+  const words = product.name.split(' ');
+  let line = '', lines = [], maxW = cw - 20;
+  words.forEach(w => {
+    const test = line + w + ' ';
+    if (ctx.measureText(test).width > maxW && line) { lines.push(line.trim()); line = w + ' '; }
+    else line = test;
+  });
+  if (line) lines.push(line.trim());
+  const startY = ch/2 - (lines.length - 1) * 12;
+  lines.forEach((l, i) => ctx.fillText(l, cw/2, startY + i * 24));
+  // Price
+  ctx.font = '16px sans-serif';
+  ctx.fillStyle = '#38c76d';
+  ctx.fillText('$' + product.price.toFixed(2), cw/2, ch - 10);
+
+  const tex = new THREE.CanvasTexture(labelCanvas);
+  const labelGeo = new THREE.PlaneGeometry(product.w * 0.95, product.h * 0.95);
+  const labelMat = new THREE.MeshBasicMaterial({map:tex, transparent:true});
+  const labelMesh = new THREE.Mesh(labelGeo, labelMat);
+  labelMesh.position.z = product.d/2 + 0.001;
+  mesh.add(labelMesh);
+
+  mesh.userData = {isProduct: true, product, quantity: 1};
+  return mesh;
+}
+
+function createGhostMesh(product) {
+  const geo = new THREE.BoxGeometry(product.w, product.h, product.d);
+  const mat = new THREE.MeshStandardMaterial({color:product.color, roughness:0.6, transparent:true, opacity:0.45, depthWrite:false});
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.userData = {isGhost: true};
+  return mesh;
+}
+
+function placeProductOnShelf(product, shelfSurface, posX, posZ) {
+  const unit = shelfUnits.find(u => u.id === shelfSurface.userData.shelfUnitId);
+  if (!unit) return;
+
+  const mesh = createProductMesh(product);
+  const worldY = shelfSurface.userData.y + product.h / 2;
+  // Convert posX to local space of shelf group
+  const localX = posX - unit.group.position.x;
+  const localZ = posZ - unit.group.position.z;
+  // Clamp within shelf bounds
+  const halfW = (SHELF_WIDTH - SHELF_POST_THICKNESS*2 - product.w) / 2;
+  const halfD = (unit.depth - SHELF_POST_THICKNESS*2 - product.d) / 2;
+  const cx = Math.max(-halfW, Math.min(halfW, localX));
+  const cz = Math.max(-halfD, Math.min(halfD, localZ));
+
+  mesh.position.set(unit.group.position.x + cx, worldY, unit.group.position.z + cz);
+  mesh.userData.shelfUnitId = unit.id;
+  mesh.userData.shelfLevel = shelfSurface.userData.level;
+  scene.add(mesh);
+  placedProducts.push(mesh);
+  updateOrderPanel();
+  updateStatus(`Placed ${product.name}`);
+}
+
+// ═══════════════════════════════════════════
+//  RAYCASTING & INTERACTION
+// ═══════════════════════════════════════════
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const infoTooltip = document.getElementById('info-tooltip');
+const ghostLabel = document.getElementById('ghost-label');
+
+function getShelfSurfaces() {
+  const surfaces = [];
+  shelfUnits.forEach(u => u.shelfSurfaces.forEach(s => surfaces.push(s)));
+  return surfaces;
+}
+
+function getProductMeshes() {
+  return placedProducts.filter(m => m.parent);
+}
+
+let isDraggingProduct = false;
+let dragTarget = null;
+let dragOffset = new THREE.Vector3();
+
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+
+  // Dragging placed product
+  if (isDraggingProduct && dragTarget) {
+    const surfaces = getShelfSurfaces();
+    const hits = raycaster.intersectObjects(surfaces);
+    if (hits.length > 0) {
+      const hit = hits[0];
+      const prod = dragTarget.userData.product;
+      const surf = hit.object;
+      const unit = shelfUnits.find(u => u.id === surf.userData.shelfUnitId);
+      if (unit) {
+        const localX = hit.point.x - unit.group.position.x;
+        const localZ = hit.point.z - unit.group.position.z;
+        const halfW = (SHELF_WIDTH - SHELF_POST_THICKNESS*2 - prod.w) / 2;
+        const halfD = (unit.depth - SHELF_POST_THICKNESS*2 - prod.d) / 2;
+        dragTarget.position.x = unit.group.position.x + Math.max(-halfW, Math.min(halfW, localX));
+        dragTarget.position.y = surf.userData.y + prod.h / 2;
+        dragTarget.position.z = unit.group.position.z + Math.max(-halfD, Math.min(halfD, localZ));
+        dragTarget.userData.shelfUnitId = unit.id;
+        dragTarget.userData.shelfLevel = surf.userData.level;
+      }
+    }
+    return;
+  }
+
+  // Ghost preview when placing
+  if (selectedProduct) {
+    const surfaces = getShelfSurfaces();
+    const hits = raycaster.intersectObjects(surfaces);
+    if (hits.length > 0) {
+      const hit = hits[0];
+      const prod = selectedProduct;
+      const surf = hit.object;
+      const unit = shelfUnits.find(u => u.id === surf.userData.shelfUnitId);
+      if (unit) {
+        if (!ghostMesh) {
+          ghostMesh = createGhostMesh(prod);
+          scene.add(ghostMesh);
+        }
+        const localX = hit.point.x - unit.group.position.x;
+        const localZ = hit.point.z - unit.group.position.z;
+        const halfW = (SHELF_WIDTH - SHELF_POST_THICKNESS*2 - prod.w) / 2;
+        const halfD = (unit.depth - SHELF_POST_THICKNESS*2 - prod.d) / 2;
+        ghostMesh.position.x = unit.group.position.x + Math.max(-halfW, Math.min(halfW, localX));
+        ghostMesh.position.y = surf.userData.y + prod.h / 2;
+        ghostMesh.position.z = unit.group.position.z + Math.max(-halfD, Math.min(halfD, localZ));
+        ghostMesh.visible = true;
+        ghostLabel.style.display = 'block';
+        ghostLabel.style.left = (e.clientX + 15) + 'px';
+        ghostLabel.style.top = (e.clientY - 10) + 'px';
+        ghostLabel.textContent = prod.name;
+      }
+    } else {
+      if (ghostMesh) ghostMesh.visible = false;
+      ghostLabel.style.display = 'none';
+    }
+    return;
+  }
+
+  // Hover over placed products
+  const prodMeshes = getProductMeshes();
+  const hits = raycaster.intersectObjects(prodMeshes);
+  if (hits.length > 0) {
+    const m = hits[0].object;
+    if (hoveredPlaced !== m) {
+      if (hoveredPlaced && hoveredPlaced !== selectedPlaced) hoveredPlaced.material.emissive.setHex(0x000000);
+      hoveredPlaced = m;
+      m.material.emissive.setHex(0x222244);
+    }
+    // Show tooltip
+    const p = m.userData.product;
+    infoTooltip.innerHTML = `
+      <div class="it-name">${p.name}</div>
+      <div class="it-row">Barcode: ${p.barcode}</div>
+      <div class="it-row">Pack: ${p.packType}</div>
+      <div class="it-row">Size: ${(p.w*100).toFixed(0)}×${(p.h*100).toFixed(0)}×${(p.d*100).toFixed(0)} cm</div>
+      <div class="it-row">Qty: ${m.userData.quantity}</div>
+      <div class="it-row" style="color:#38c76d;font-weight:700">$${(p.price * m.userData.quantity).toFixed(2)}</div>
+    `;
+    infoTooltip.style.display = 'block';
+    infoTooltip.style.left = (e.clientX + 15) + 'px';
+    infoTooltip.style.top = (e.clientY - 10) + 'px';
+    canvas.style.cursor = 'pointer';
+  } else {
+    if (hoveredPlaced && hoveredPlaced !== selectedPlaced) hoveredPlaced.material.emissive.setHex(0x000000);
+    hoveredPlaced = null;
+    infoTooltip.style.display = 'none';
+    canvas.style.cursor = selectedProduct ? 'crosshair' : 'default';
+  }
+});
+
+canvas.addEventListener('mousedown', e => {
+  if (e.button !== 0) return; // Only left click
+
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+
+  // If a product is selected from catalog, try to place it
+  if (selectedProduct) {
+    const surfaces = getShelfSurfaces();
+    const hits = raycaster.intersectObjects(surfaces);
+    if (hits.length > 0) {
+      placeProductOnShelf(selectedProduct, hits[0].object, hits[0].point.x, hits[0].point.z);
+    }
+    return;
+  }
+
+  // Try to pick a placed product
+  const prodMeshes = getProductMeshes();
+  const hits = raycaster.intersectObjects(prodMeshes);
+  if (hits.length > 0) {
+    const m = hits[0].object;
+    selectPlacedProduct(m);
+    // Start drag
+    isDraggingProduct = true;
+    dragTarget = m;
+    controls.enabled = false;
+    return;
+  }
+
+  // Clicked empty space => deselect
+  deselectAll();
+});
+
+canvas.addEventListener('mouseup', e => {
+  if (isDraggingProduct) {
+    isDraggingProduct = false;
+    dragTarget = null;
+    controls.enabled = true;
+  }
+});
+
+canvas.addEventListener('mouseleave', () => {
+  infoTooltip.style.display = 'none';
+  ghostLabel.style.display = 'none';
+  if (ghostMesh) ghostMesh.visible = false;
+});
+
+// Double-click to increment quantity
+canvas.addEventListener('dblclick', e => {
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(getProductMeshes());
+  if (hits.length > 0) {
+    hits[0].object.userData.quantity++;
+    updateOrderPanel();
+    updateStatus(`Quantity: ${hits[0].object.userData.quantity}`);
+  }
+});
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (selectedPlaced && document.activeElement.tagName !== 'INPUT') {
+      e.preventDefault();
+      deleteSelected();
+    }
+  }
+  if (e.key === 'Escape') {
+    deselectAll();
+  }
+  if (e.key === '+' || e.key === '=') {
+    if (selectedPlaced) { selectedPlaced.userData.quantity++; updateOrderPanel(); }
+  }
+  if (e.key === '-' || e.key === '_') {
+    if (selectedPlaced && selectedPlaced.userData.quantity > 1) { selectedPlaced.userData.quantity--; updateOrderPanel(); }
+  }
+});
+
+function selectPlacedProduct(mesh) {
+  deselectPlaced();
+  selectedPlaced = mesh;
+  mesh.material.emissive.setHex(0x334466);
+  const p = mesh.userData.product;
+  updateStatus(`Selected: ${p.name} | Qty: ${mesh.userData.quantity} | +/- to change qty | Del to remove`);
+}
+
+function deselectPlaced() {
+  if (selectedPlaced) {
+    selectedPlaced.material.emissive.setHex(0x000000);
+    selectedPlaced = null;
+  }
+}
+
+function deselectAll() {
+  deselectPlaced();
+  selectedProduct = null;
+  if (ghostMesh) { scene.remove(ghostMesh); ghostMesh = null; }
+  ghostLabel.style.display = 'none';
+  document.querySelectorAll('.product-card.selected').forEach(c => c.classList.remove('selected'));
+  canvas.style.cursor = 'default';
+  updateStatus('Click a product then click on shelf to place. Right-drag to rotate. Scroll to zoom.');
+}
+
+function deleteSelected() {
+  if (!selectedPlaced) return;
+  scene.remove(selectedPlaced);
+  placedProducts = placedProducts.filter(m => m !== selectedPlaced);
+  selectedPlaced = null;
+  updateOrderPanel();
+  updateStatus('Product removed');
+}
+
+function clearAllProducts() {
+  placedProducts.forEach(m => scene.remove(m));
+  placedProducts = [];
+  selectedPlaced = null;
+  updateOrderPanel();
+  updateStatus('All products cleared');
+}
+
+// ═══════════════════════════════════════════
+//  SIDEBAR: PRODUCT CATALOG
+// ═══════════════════════════════════════════
+const productList = document.getElementById('product-list');
+const searchInput = document.getElementById('search');
+const categoryFilter = document.getElementById('category-filter');
+
+// Populate categories
+const categories = [...new Set(PRODUCTS.map(p => p.category))].sort();
+categories.forEach(c => {
+  const opt = document.createElement('option');
+  opt.value = c; opt.textContent = c;
+  categoryFilter.appendChild(opt);
+});
+
+function renderProductList() {
+  const query = searchInput.value.toLowerCase();
+  const cat = categoryFilter.value;
+  productList.innerHTML = '';
+
+  const filtered = PRODUCTS.filter(p => {
+    if (cat && p.category !== cat) return false;
+    if (query && !p.name.toLowerCase().includes(query) && !p.barcode.includes(query)) return false;
+    return true;
+  });
+
+  filtered.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'product-card';
+    if (selectedProduct && selectedProduct.id === p.id) card.classList.add('selected');
+    card.innerHTML = `
+      <div class="p-name">${p.name}</div>
+      <div class="p-meta">${p.barcode} &bull; ${p.packType} &bull; ${p.category}</div>
+      <div class="p-price">$${p.price.toFixed(2)}</div>
+      <div class="p-size">${(p.w*100).toFixed(0)}×${(p.h*100).toFixed(0)}×${(p.d*100).toFixed(0)} cm</div>
+    `;
+    card.addEventListener('click', () => {
+      deselectPlaced();
+      if (selectedProduct && selectedProduct.id === p.id) {
+        deselectAll();
+        return;
+      }
+      selectedProduct = p;
+      if (ghostMesh) { scene.remove(ghostMesh); ghostMesh = null; }
+      document.querySelectorAll('.product-card.selected').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      canvas.style.cursor = 'crosshair';
+      updateStatus(`Selected: ${p.name} — Click on a shelf to place`);
+    });
+    productList.appendChild(card);
+  });
+}
+
+searchInput.addEventListener('input', renderProductList);
+categoryFilter.addEventListener('change', renderProductList);
+renderProductList();
+
+// ═══════════════════════════════════════════
+//  ORDER PANEL
+// ═══════════════════════════════════════════
+function updateOrderPanel() {
+  const orderItems = document.getElementById('order-items');
+  const orderTotal = document.getElementById('order-total');
+
+  // Aggregate by product id
+  const agg = {};
+  placedProducts.forEach(m => {
+    if (!m.parent) return;
+    const p = m.userData.product;
+    if (!agg[p.id]) agg[p.id] = {product: p, totalQty: 0, totalPrice: 0};
+    agg[p.id].totalQty += m.userData.quantity;
+    agg[p.id].totalPrice += p.price * m.userData.quantity;
+  });
+
+  let html = '';
+  let grandTotal = 0;
+  Object.values(agg).forEach(item => {
+    grandTotal += item.totalPrice;
+    html += `<div class="order-item">
+      <span class="oi-name">${item.product.name}</span>
+      <span class="oi-qty">×${item.totalQty}</span>
+      <span class="oi-price">$${item.totalPrice.toFixed(2)}</span>
+    </div>`;
+  });
+  orderItems.innerHTML = html || '<div style="color:var(--text2);font-size:12px;padding:8px 0">No products placed yet</div>';
+  orderTotal.textContent = '$' + grandTotal.toFixed(2);
+}
+updateOrderPanel();
+
+// ═══════════════════════════════════════════
+//  SHELF CONFIG
+// ═══════════════════════════════════════════
+let configTarget = null;
+
+function openShelfConfig() {
+  document.getElementById('shelf-config').style.display = 'block';
+  const unit = shelfUnits[shelfUnits.length - 1];
+  if (unit) {
+    document.getElementById('cfg-levels').value = unit.levels;
+    document.getElementById('cfg-depth').value = unit.depth;
+  }
+}
+function closeShelfConfig() { document.getElementById('shelf-config').style.display = 'none'; }
+
+function applyShelfConfig() {
+  const levels = parseInt(document.getElementById('cfg-levels').value) || 5;
+  const depth = parseFloat(document.getElementById('cfg-depth').value) || 0.5;
+  const colorHex = document.getElementById('cfg-color').value;
+  const color = parseInt(colorHex.replace('#',''), 16);
+
+  // Rebuild all shelf units with new config
+  // Remove old units but keep products
+  shelfUnits.forEach(u => scene.remove(u.group));
+  const oldUnits = [...shelfUnits];
+  shelfUnits = [];
+  shelfIdCounter = 0;
+  oldUnits.forEach((u, i) => {
+    createShelfUnit(u.x, u.z, levels, depth, color);
+  });
+
+  closeShelfConfig();
+  updateStatus(`Shelves updated: ${levels} levels, ${depth}m depth`);
+}
+
+// ═══════════════════════════════════════════
+//  SAVE / LOAD
+// ═══════════════════════════════════════════
+function saveLayout() {
+  const data = {
+    shelfUnits: shelfUnits.map(u => ({x:u.x, z:u.z, levels:u.levels, depth:u.depth, color:u.color})),
+    products: placedProducts.filter(m => m.parent).map(m => ({
+      productId: m.userData.product.id,
+      quantity: m.userData.quantity,
+      x: m.position.x,
+      y: m.position.y,
+      z: m.position.z,
+      shelfUnitId: m.userData.shelfUnitId,
+      shelfLevel: m.userData.shelfLevel
+    }))
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'planogram-layout.json'; a.click();
+  URL.revokeObjectURL(url);
+  updateStatus('Layout saved');
+}
+
+function loadLayout() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        // Clear current
+        placedProducts.forEach(m => scene.remove(m));
+        placedProducts = [];
+        shelfUnits.forEach(u => scene.remove(u.group));
+        shelfUnits = [];
+        shelfIdCounter = 0;
+
+        // Recreate shelves
+        data.shelfUnits.forEach(u => createShelfUnit(u.x, u.z, u.levels, u.depth, u.color));
+
+        // Recreate products
+        data.products.forEach(pd => {
+          const product = PRODUCTS.find(p => p.id === pd.productId);
+          if (!product) return;
+          const mesh = createProductMesh(product);
+          mesh.position.set(pd.x, pd.y, pd.z);
+          mesh.userData.quantity = pd.quantity || 1;
+          mesh.userData.shelfUnitId = pd.shelfUnitId;
+          mesh.userData.shelfLevel = pd.shelfLevel;
+          scene.add(mesh);
+          placedProducts.push(mesh);
+        });
+
+        updateOrderPanel();
+        updateStatus('Layout loaded');
+      } catch(err) {
+        updateStatus('Error loading layout: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function exportOrder() {
+  const agg = {};
+  placedProducts.forEach(m => {
+    if (!m.parent) return;
+    const p = m.userData.product;
+    if (!agg[p.id]) agg[p.id] = {product: p, totalQty: 0, totalPrice: 0};
+    agg[p.id].totalQty += m.userData.quantity;
+    agg[p.id].totalPrice += p.price * m.userData.quantity;
+  });
+
+  let csv = 'Product Name,Barcode,Pack Type,Quantity,Unit Price,Total Price\n';
+  let grandTotal = 0;
+  Object.values(agg).forEach(item => {
+    grandTotal += item.totalPrice;
+    csv += `"${item.product.name}",${item.product.barcode},"${item.product.packType}",${item.totalQty},${item.product.price.toFixed(2)},${item.totalPrice.toFixed(2)}\n`;
+  });
+  csv += `\n,,,,Grand Total,$${grandTotal.toFixed(2)}\n`;
+
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'order-summary.csv'; a.click();
+  URL.revokeObjectURL(url);
+  updateStatus('Order exported as CSV');
+}
+
+// ═══════════════════════════════════════════
+//  STATUS BAR
+// ═══════════════════════════════════════════
+function updateStatus(msg) {
+  document.getElementById('status-bar').textContent = msg;
+}
+
+// ═══════════════════════════════════════════
+//  RENDER LOOP
+// ═══════════════════════════════════════════
+function resize() {
+  const wrap = document.getElementById('canvas-wrap');
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+resize();
+
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>
