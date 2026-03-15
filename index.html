@@ -1,919 +1,1160 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shelf Planogram — Fastener Store</title>
+<title>SUG Planogram — คู่มือการจัดเรียง ไถ่เชียงวัสดุ</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --sidebar:340px;
-  --bg:#1a1d23;
-  --panel:#23272e;
-  --border:#353a44;
-  --accent:#4e8cff;
-  --accent2:#38c76d;
-  --text:#e4e6ea;
-  --text2:#9a9fb0;
+  --sidebar:380px;
+  --bg:#12141a;
+  --panel:#1b1e26;
+  --panel2:#222630;
+  --border:#2e3340;
+  --accent:#e8651a;
+  --green:#2ecc71;
+  --text:#e8eaf0;
+  --text2:#8891a4;
   --danger:#e84855;
+  --sug-orange:#e8651a;
+  --light-orange:#f4a460;
+  --dark-orange:#d2691e;
+  --pink:#e87090;
 }
-html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+html,body{height:100%;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
 #app{display:flex;height:100vh}
 
 /* ── Sidebar ── */
 #sidebar{width:var(--sidebar);min-width:var(--sidebar);background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:10}
-#sidebar h2{padding:16px 18px 8px;font-size:14px;text-transform:uppercase;letter-spacing:1px;color:var(--text2)}
-#search{margin:6px 14px 10px;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:#1a1d23;color:var(--text);font-size:13px;outline:none}
-#search:focus{border-color:var(--accent)}
-#category-filter{margin:0 14px 10px;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:#1a1d23;color:var(--text);font-size:13px;outline:none}
+.sidebar-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.sidebar-header .logo{width:48px;height:28px;background:var(--sug-orange);border-radius:4px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#fff;letter-spacing:1px}
+.sidebar-header h1{font-size:14px;font-weight:600}
+.sidebar-header h1 span{font-size:11px;color:var(--text2);display:block;font-weight:400}
 
+.tab-bar{display:flex;border-bottom:1px solid var(--border)}
+.tab-bar button{flex:1;padding:10px;font-size:12px;background:none;border:none;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;font-family:inherit;transition:.15s}
+.tab-bar button:hover{color:var(--text)}
+.tab-bar button.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+.tab-content{display:none;flex:1;flex-direction:column;overflow:hidden}
+.tab-content.active{display:flex}
+
+/* Shelf selector */
+.shelf-selector{padding:10px;display:flex;gap:6px;border-bottom:1px solid var(--border)}
+.shelf-btn{flex:1;padding:8px 4px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;font-size:11px;font-family:inherit;transition:.15s;text-align:center}
+.shelf-btn:hover{border-color:var(--accent);color:var(--text)}
+.shelf-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* Product list */
+.section-header{padding:8px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.section-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
 #product-list{flex:1;overflow-y:auto;padding:4px 10px}
-.product-card{background:#1a1d23;border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;cursor:grab;transition:.15s}
-.product-card:hover{border-color:var(--accent);transform:translateY(-1px)}
-.product-card.selected{border-color:var(--accent);box-shadow:0 0 0 2px rgba(78,140,255,.3)}
-.product-card .p-name{font-size:13px;font-weight:600;margin-bottom:3px}
-.product-card .p-meta{font-size:11px;color:var(--text2);line-height:1.5}
-.product-card .p-price{font-size:13px;font-weight:700;color:var(--accent2);margin-top:4px}
-.product-card .p-size{font-size:10px;color:var(--text2);background:#2a2e36;padding:2px 6px;border-radius:4px;display:inline-block;margin-top:4px}
+.product-row{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-bottom:4px;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:8px;font-size:11px}
+.product-row:hover{border-color:var(--accent);transform:translateY(-1px)}
+.product-row.selected{border-color:var(--accent);box-shadow:0 0 0 2px rgba(232,101,26,.25)}
+.product-row .zone-bar{width:4px;height:32px;border-radius:2px;flex-shrink:0}
+.product-row .p-info{flex:1;min-width:0}
+.product-row .p-code{font-size:9px;color:var(--text2);font-family:monospace}
+.product-row .p-name{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.product-row .p-meta{font-size:10px;color:var(--text2)}
+.product-row .p-price{font-size:12px;font-weight:700;color:var(--green);white-space:nowrap}
+.product-row .p-qty{display:flex;align-items:center;gap:4px}
+.product-row .qty-btn{width:20px;height:20px;border-radius:4px;border:1px solid var(--border);background:var(--panel2);color:var(--text);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
+.product-row .qty-btn:hover{border-color:var(--accent)}
+.product-row .qty-val{font-size:12px;font-weight:700;min-width:18px;text-align:center}
 
-/* ── Order Panel ── */
-#order-panel{border-top:1px solid var(--border);max-height:260px;overflow-y:auto;padding:10px 14px}
-#order-panel h3{font-size:13px;color:var(--text2);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
-#order-panel h3 span{color:var(--accent2);font-size:15px}
-.order-item{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border)}
-.order-item .oi-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.order-item .oi-qty{margin:0 8px;color:var(--accent);min-width:30px;text-align:center}
-.order-item .oi-price{min-width:60px;text-align:right;color:var(--accent2)}
+/* Order tab */
+#order-content{flex:1;overflow-y:auto;padding:14px}
+.order-summary-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.order-summary-header h3{font-size:14px}
+.order-summary-header .total{font-size:20px;font-weight:800;color:var(--green)}
+.order-table{width:100%;font-size:11px;border-collapse:collapse}
+.order-table th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text2);font-weight:600;font-size:10px;text-transform:uppercase}
+.order-table td{padding:6px 8px;border-bottom:1px solid var(--border)}
+.order-table td:last-child{text-align:right;color:var(--green);font-weight:600}
+.order-table .qty-cell{text-align:center;color:var(--accent)}
+.order-actions{padding:12px 0;display:flex;gap:8px}
+.order-actions button{flex:1;padding:10px;border-radius:6px;border:1px solid var(--border);background:var(--panel2);color:var(--text);cursor:pointer;font-size:12px;font-family:inherit;transition:.15s}
+.order-actions button:hover{border-color:var(--accent)}
+.order-actions button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 
 /* ── Canvas ── */
 #canvas-wrap{flex:1;position:relative}
 canvas{display:block;width:100%;height:100%}
 
 /* ── Toolbar ── */
-#toolbar{position:absolute;top:14px;left:14px;display:flex;gap:8px;z-index:5}
-#toolbar button,.tool-btn{padding:8px 14px;border-radius:6px;border:1px solid var(--border);background:var(--panel);color:var(--text);font-size:12px;cursor:pointer;transition:.15s;font-family:inherit}
-#toolbar button:hover,.tool-btn:hover{border-color:var(--accent);background:#2a2e36}
-#toolbar button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+#toolbar{position:absolute;top:14px;left:14px;display:flex;gap:6px;z-index:5;flex-wrap:wrap;max-width:calc(100% - 28px)}
+.tool-btn{padding:8px 14px;border-radius:6px;border:1px solid var(--border);background:var(--panel);color:var(--text);font-size:11px;cursor:pointer;transition:.15s;font-family:inherit;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.tool-btn:hover{border-color:var(--accent);background:var(--panel2)}
+.tool-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
 
 /* ── Info tooltip ── */
-#info-tooltip{position:absolute;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-size:12px;pointer-events:none;display:none;z-index:20;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
-#info-tooltip .it-name{font-size:14px;font-weight:700;margin-bottom:4px}
-#info-tooltip .it-row{color:var(--text2);line-height:1.8}
-
-/* ── Shelf config modal ── */
-#shelf-config{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:24px 28px;z-index:30;display:none;min-width:320px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
-#shelf-config h3{margin-bottom:16px;font-size:16px}
-#shelf-config label{display:block;font-size:13px;color:var(--text2);margin-bottom:4px;margin-top:12px}
-#shelf-config input,#shelf-config select{width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:#1a1d23;color:var(--text);font-size:13px;outline:none}
-#shelf-config .btn-row{margin-top:20px;display:flex;gap:10px;justify-content:flex-end}
-#shelf-config .btn-row button{padding:8px 20px;border-radius:6px;border:1px solid var(--border);background:var(--accent);color:#fff;cursor:pointer;font-size:13px;font-family:inherit}
-#shelf-config .btn-row button.cancel{background:transparent;color:var(--text)}
+#info-tooltip{position:absolute;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 18px;font-size:12px;pointer-events:none;display:none;z-index:20;min-width:220px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+#info-tooltip .it-name{font-size:14px;font-weight:700;margin-bottom:6px}
+#info-tooltip .it-row{color:var(--text2);line-height:1.9}
+#info-tooltip .it-row b{color:var(--text)}
 
 /* ── Status bar ── */
-#status-bar{position:absolute;bottom:14px;left:14px;font-size:11px;color:var(--text2);background:var(--panel);padding:6px 14px;border-radius:6px;border:1px solid var(--border);z-index:5}
+#status-bar{position:absolute;bottom:14px;left:14px;right:14px;font-size:11px;color:var(--text2);background:var(--panel);padding:8px 16px;border-radius:8px;border:1px solid var(--border);z-index:5;display:flex;justify-content:space-between;align-items:center}
+#status-bar .status-right{display:flex;gap:16px}
+#status-bar .stat b{color:var(--text)}
 
-/* ── Ghost preview ── */
-#ghost-label{position:absolute;pointer-events:none;font-size:11px;color:var(--accent);background:rgba(30,33,40,.85);padding:3px 8px;border-radius:4px;display:none;z-index:15;white-space:nowrap}
+/* ── Legend ── */
+#legend{position:absolute;bottom:60px;right:14px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px 14px;z-index:5;font-size:11px}
+.legend-item{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.legend-item:last-child{margin-bottom:0}
+.legend-swatch{width:14px;height:14px;border-radius:3px}
+
+/* ═══ TUTORIAL ═══ */
+#tutorial-overlay{position:fixed;inset:0;background:rgba(10,12,18,.92);z-index:100;display:flex;align-items:center;justify-content:center}
+#tutorial-overlay.hidden{display:none}
+.tutorial-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:36px 44px;max-width:680px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center}
+.tutorial-card h2{font-size:22px;margin-bottom:8px}
+.tutorial-card .tut-subtitle{color:var(--text2);font-size:14px;margin-bottom:28px;line-height:1.6}
+.tut-steps-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;text-align:left;margin-bottom:28px}
+.tut-steps-grid .tut-step{background:var(--bg);padding:16px;border-radius:10px;border:1px solid var(--border)}
+.tut-step .tut-step-num{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:14px;margin-bottom:8px}
+.tut-step h4{font-size:14px;margin-bottom:4px}
+.tut-step p{font-size:12px;color:var(--text2);line-height:1.7}
+.tut-nav{display:flex;gap:10px;justify-content:center}
+.tut-nav button{padding:12px 32px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-size:14px;font-family:inherit;transition:.15s}
+.tut-nav .btn-skip{background:transparent;color:var(--text2)}
+.tut-nav .btn-start{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.tut-nav .btn-start:hover{background:#d45a15}
+.tut-dots{display:flex;gap:6px;justify-content:center;margin-bottom:20px}
+.tut-dots .dot{width:8px;height:8px;border-radius:50%;background:var(--border)}
+.tut-dots .dot.active{background:var(--accent)}
 
 /* scrollbar */
-::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#454b5a}
 </style>
 </head>
 <body>
 <div id="app">
-  <!-- Sidebar -->
   <div id="sidebar">
-    <h2>Product Catalog</h2>
-    <input id="search" type="text" placeholder="Search products...">
-    <select id="category-filter"><option value="">All Categories</option></select>
-    <div id="product-list"></div>
-    <div id="order-panel">
-      <h3>Order Summary <span id="order-total">$0.00</span></h3>
-      <div id="order-items"></div>
+    <div class="sidebar-header">
+      <div class="logo">SUG</div>
+      <h1>Planogram <span>คู่มือการจัดเรียง ไถ่เชียงวัสดุ</span></h1>
+    </div>
+    <div class="tab-bar">
+      <button class="active" onclick="switchTab('products')">ชั้นวาง Shelves</button>
+      <button onclick="switchTab('order')">สรุปคำสั่งซื้อ Order</button>
+    </div>
+
+    <div id="tab-products" class="tab-content active">
+      <div class="shelf-selector" id="shelf-selector"></div>
+      <div id="product-list"></div>
+    </div>
+
+    <div id="tab-order" class="tab-content">
+      <div id="order-content">
+        <div class="order-summary-header">
+          <h3>สรุปคำสั่งซื้อ</h3>
+          <div class="total" id="order-total">฿0</div>
+        </div>
+        <table class="order-table">
+          <thead><tr><th>สินค้า</th><th>รหัส</th><th>จำนวน</th><th>ราคา</th></tr></thead>
+          <tbody id="order-tbody"></tbody>
+        </table>
+        <div class="order-actions">
+          <button onclick="exportCSV()">ส่งออก CSV</button>
+          <button onclick="exportPDF()" class="primary">พิมพ์ Print</button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- 3D Canvas -->
   <div id="canvas-wrap">
     <div id="toolbar">
-      <button onclick="addShelfUnit()" title="Add shelf unit">+ Shelf Unit</button>
-      <button onclick="openShelfConfig()" title="Configure shelf">Config Shelf</button>
-      <button onclick="deleteSelected()" title="Remove selected product">Delete</button>
-      <button onclick="clearAllProducts()" title="Clear all products">Clear All</button>
-      <button onclick="saveLayout()" title="Save layout">Save</button>
-      <button onclick="loadLayout()" title="Load layout">Load</button>
-      <button onclick="exportOrder()" title="Export order">Export Order</button>
+      <button class="tool-btn" onclick="resetCamera()">⟲ Reset View</button>
+      <button class="tool-btn" onclick="showTutorial()">? Help</button>
     </div>
     <canvas id="c"></canvas>
     <div id="info-tooltip"></div>
-    <div id="ghost-label"></div>
-    <div id="status-bar">Click a product then click on shelf to place. Right-drag to rotate. Scroll to zoom.</div>
-
-    <!-- Shelf config modal -->
-    <div id="shelf-config">
-      <h3>Shelf Unit Configuration</h3>
-      <label>Number of Levels</label>
-      <input id="cfg-levels" type="number" value="5" min="2" max="12">
-      <label>Shelf Depth (m)</label>
-      <input id="cfg-depth" type="number" value="0.5" step="0.05" min="0.3" max="1.0">
-      <label>Shelf Color</label>
-      <select id="cfg-color">
-        <option value="#777f8e">Steel Grey</option>
-        <option value="#4a6fa5">Blue</option>
-        <option value="#5a8a5e">Green</option>
-        <option value="#8a6b4a">Brown</option>
-      </select>
-      <div class="btn-row">
-        <button class="cancel" onclick="closeShelfConfig()">Cancel</button>
-        <button onclick="applyShelfConfig()">Apply</button>
+    <div id="status-bar">
+      <span id="status-text">คลิกที่ชั้นวางเพื่อดูรายละเอียด — Click a shelf to view details</span>
+      <div class="status-right">
+        <span class="stat">Shelves: <b>4</b></span>
+        <span class="stat">Products: <b id="stat-products">0</b></span>
+        <span class="stat">Total: <b id="stat-total" style="color:var(--green)">฿0</b></span>
       </div>
+    </div>
+    <div id="legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:#f4a460"></div>แพ็คถุง SUG (Bag Pack)</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#d2691e"></div>SUG Premium Box</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#e87090"></div>อุปกรณ์เสริม (Accessories)</div>
     </div>
   </div>
 </div>
 
-<!-- Three.js -->
+<!-- Tutorial -->
+<div id="tutorial-overlay">
+  <div class="tutorial-card" id="tut-card"></div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.152.0/examples/js/controls/OrbitControls.js"></script>
 <script>
 // ═══════════════════════════════════════════
-//  SAMPLE PRODUCT DATA
+//  TUTORIAL (5-step)
 // ═══════════════════════════════════════════
-const PRODUCTS = [
-  // Bolts
-  {id:1, name:"M6×20 Hex Bolt DIN933",         barcode:"4901001001",category:"Bolts",     packType:"Box 200pcs",  price:12.50, w:0.15,h:0.08,d:0.10,color:"#6a9fd8"},
-  {id:2, name:"M8×30 Hex Bolt DIN933",         barcode:"4901001002",category:"Bolts",     packType:"Box 100pcs",  price:15.80, w:0.18,h:0.10,d:0.12,color:"#5b8ec4"},
-  {id:3, name:"M10×40 Hex Bolt DIN933",        barcode:"4901001003",category:"Bolts",     packType:"Box 50pcs",   price:18.50, w:0.20,h:0.12,d:0.14,color:"#4c7db0"},
-  {id:4, name:"M12×50 Hex Bolt DIN933",        barcode:"4901001004",category:"Bolts",     packType:"Box 25pcs",   price:22.00, w:0.22,h:0.14,d:0.15,color:"#3d6c9c"},
-  {id:5, name:"M6×25 Carriage Bolt",           barcode:"4901001005",category:"Bolts",     packType:"Box 200pcs",  price:14.00, w:0.15,h:0.08,d:0.10,color:"#7ab0e8"},
-  {id:6, name:"M8×40 Flange Bolt",             barcode:"4901001006",category:"Bolts",     packType:"Box 100pcs",  price:19.50, w:0.18,h:0.10,d:0.12,color:"#6aa0d8"},
+const tutorialPages = [
+  {
+    title:'ยินดีต้อนรับ — Welcome',
+    subtitle:'ระบบแผนผังการจัดเรียงสินค้า SUG',
+    content:`
+      <div style="margin-bottom:20px">
+        <div style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:38px;background:var(--sug-orange);border-radius:6px;font-weight:900;font-size:18px;color:#fff;letter-spacing:1px">SUG</div>
+      </div>
+      <p style="color:var(--text2);font-size:13px;line-height:1.8;margin-bottom:8px">
+        แอปนี้แสดงแผนผังการจัดเรียงสินค้า SUG สำเร็จรูป 4 ชั้นวาง<br>
+        ตามคู่มือการจัดเรียง ไถ่เชียงวัสดุ<br><br>
+        This app displays 4 pre-built SUG shelf planograms<br>
+        with products already arranged per the official guide.
+      </p>
+    `
+  },
+  {
+    title:'ชั้นวาง 3 โซนสี — Color Zones',
+    subtitle:'แต่ละชั้นวางแบ่งเป็น 3 โซนตามสีบรรจุภัณฑ์',
+    content:`
+      <div class="tut-steps-grid">
+        <div class="tut-step">
+          <div style="width:24px;height:24px;border-radius:4px;background:#f4a460;margin-bottom:8px"></div>
+          <h4>ส้มอ่อน — แพ็คถุง SUG</h4>
+          <p>สินค้าแบบแพ็คถุง (Bag Pack) จัดเรียงที่ชั้นบน-กลาง สำหรับแขวนผนัง</p>
+        </div>
+        <div class="tut-step">
+          <div style="width:24px;height:24px;border-radius:4px;background:#d2691e;margin-bottom:8px"></div>
+          <h4>ส้มเข้ม — Premium Box</h4>
+          <p>สินค้ากล่อง Premium Box จัดเรียงที่ชั้นกลาง สำหรับตั้งวาง</p>
+        </div>
+        <div class="tut-step">
+          <div style="width:24px;height:24px;border-radius:4px;background:#e87090;margin-bottom:8px"></div>
+          <h4>ชมพู — อุปกรณ์เสริม</h4>
+          <p>อุปกรณ์เสริม เชิงชาย แผ่นปิดรอยต่อ จัดเรียงที่ชั้นล่างสุด</p>
+        </div>
+        <div class="tut-step">
+          <div style="width:24px;height:24px;border-radius:4px;background:#e8651a;margin-bottom:8px"></div>
+          <h4>4 ชั้นวาง</h4>
+          <p>เลือกดูชั้นวางที่ 1-4 จากแถบด้านซ้าย กล้องจะหมุนไปยังชั้นที่เลือก</p>
+        </div>
+      </div>
+    `
+  },
+  {
+    title:'การนำทาง 3D — Navigation',
+    subtitle:'หมุน ซูม เลื่อนมุมมอง 3 มิติ',
+    content:`
+      <div style="text-align:left;max-width:360px;margin:0 auto">
+        <table style="width:100%;font-size:13px;line-height:2.4">
+          <tr><td style="color:var(--text2)">คลิกขวา + ลาก</td><td><b>หมุนมุมมอง</b></td></tr>
+          <tr><td style="color:var(--text2)">Scroll</td><td><b>ซูมเข้า/ออก</b></td></tr>
+          <tr><td style="color:var(--text2)">คลิกกลาง + ลาก</td><td><b>เลื่อนมุมมอง</b></td></tr>
+          <tr><td style="color:var(--text2)">คลิกซ้าย</td><td><b>เลือกสินค้า</b></td></tr>
+        </table>
+      </div>
+    `
+  },
+  {
+    title:'ปรับจำนวน — Adjust Quantities',
+    subtitle:'เพิ่ม/ลดจำนวนสินค้าได้',
+    content:`
+      <div class="tut-steps-grid">
+        <div class="tut-step">
+          <div class="tut-step-num">1</div>
+          <h4>ดับเบิลคลิก</h4>
+          <p>ดับเบิลคลิกสินค้าบนชั้นวาง หรือในรายการด้านซ้าย เพื่อเพิ่มจำนวน +1</p>
+        </div>
+        <div class="tut-step">
+          <div class="tut-step-num">2</div>
+          <h4>ปุ่ม +/−</h4>
+          <p>ใช้ปุ่ม +/− ในรายการสินค้าด้านซ้าย เพื่อปรับจำนวนตามต้องการ</p>
+        </div>
+      </div>
+    `
+  },
+  {
+    title:'ส่งออกคำสั่งซื้อ — Export',
+    subtitle:'สรุปรายการและส่งออก CSV',
+    content:`
+      <div class="tut-steps-grid">
+        <div class="tut-step">
+          <div class="tut-step-num">1</div>
+          <h4>แท็บ สรุปคำสั่งซื้อ</h4>
+          <p>คลิกแท็บ "สรุปคำสั่งซื้อ" เพื่อดูรายการสินค้าทั้งหมดพร้อมราคารวม</p>
+        </div>
+        <div class="tut-step">
+          <div class="tut-step-num">2</div>
+          <h4>ส่งออก CSV</h4>
+          <p>กดปุ่ม "ส่งออก CSV" เพื่อดาวน์โหลดไฟล์รายการสินค้าสำหรับสั่งซื้อ</p>
+        </div>
+      </div>
+    `
+  }
+];
 
-  // Nuts
-  {id:7, name:"M6 Hex Nut DIN934",             barcode:"4901002001",category:"Nuts",      packType:"Box 500pcs",  price:8.50,  w:0.12,h:0.06,d:0.08,color:"#d8a06a"},
-  {id:8, name:"M8 Hex Nut DIN934",             barcode:"4901002002",category:"Nuts",      packType:"Box 250pcs",  price:10.20, w:0.14,h:0.07,d:0.09,color:"#c89050"},
-  {id:9, name:"M10 Hex Nut DIN934",            barcode:"4901002003",category:"Nuts",      packType:"Box 100pcs",  price:11.80, w:0.15,h:0.08,d:0.10,color:"#b88040"},
-  {id:10,name:"M8 Nylon Lock Nut",             barcode:"4901002004",category:"Nuts",      packType:"Box 200pcs",  price:14.50, w:0.14,h:0.07,d:0.09,color:"#e8b07a"},
-  {id:11,name:"M10 Flange Nut",                barcode:"4901002005",category:"Nuts",      packType:"Box 100pcs",  price:13.00, w:0.15,h:0.08,d:0.10,color:"#d8a060"},
+let tutPage = 0;
+function renderTutorial() {
+  const card = document.getElementById('tut-card');
+  const page = tutorialPages[tutPage];
+  const isLast = tutPage === tutorialPages.length - 1;
+  const isFirst = tutPage === 0;
+  card.innerHTML = `
+    <h2>${page.title}</h2>
+    <p class="tut-subtitle">${page.subtitle}</p>
+    ${page.content}
+    <div class="tut-dots">${tutorialPages.map((_,i) => `<div class="dot ${i===tutPage?'active':''}"></div>`).join('')}</div>
+    <div class="tut-nav">
+      ${isFirst ? '<button class="btn-skip" onclick="closeTutorial()">ข้าม Skip</button>' : '<button class="btn-skip" onclick="prevTutPage()">← ย้อนกลับ</button>'}
+      <button class="btn-start" onclick="${isLast ? 'closeTutorial()' : 'nextTutPage()'}">
+        ${isLast ? 'เริ่มใช้งาน Start →' : 'ถัดไป Next →'}
+      </button>
+    </div>
+  `;
+}
+function nextTutPage() { if (tutPage < tutorialPages.length-1) { tutPage++; renderTutorial(); } }
+function prevTutPage() { if (tutPage > 0) { tutPage--; renderTutorial(); } }
+function closeTutorial() { document.getElementById('tutorial-overlay').classList.add('hidden'); }
+function showTutorial() { tutPage=0; document.getElementById('tutorial-overlay').classList.remove('hidden'); renderTutorial(); }
 
-  // Screws
-  {id:12,name:"4×40mm Wood Screw PH",          barcode:"4901003001",category:"Screws",    packType:"Box 500pcs",  price:9.80,  w:0.16,h:0.08,d:0.10,color:"#8ad86a"},
-  {id:13,name:"5×50mm Wood Screw PH",          barcode:"4901003002",category:"Screws",    packType:"Box 250pcs",  price:11.50, w:0.18,h:0.09,d:0.11,color:"#7ac85a"},
-  {id:14,name:"4.2×19 Self-Tapping Screw",     barcode:"4901003003",category:"Screws",    packType:"Box 1000pcs", price:16.00, w:0.14,h:0.10,d:0.10,color:"#6ab84a"},
-  {id:15,name:"4.8×25 Self-Drilling Tek Screw", barcode:"4901003004",category:"Screws",    packType:"Box 500pcs",  price:22.50, w:0.16,h:0.10,d:0.12,color:"#5aa83a"},
-  {id:16,name:"6×40mm Chipboard Screw",        barcode:"4901003005",category:"Screws",    packType:"Box 200pcs",  price:10.80, w:0.17,h:0.09,d:0.11,color:"#8ae86a"},
-  {id:17,name:"M6×16 Socket Head Cap Screw",   barcode:"4901003006",category:"Screws",    packType:"Box 100pcs",  price:13.50, w:0.12,h:0.07,d:0.08,color:"#4a982a"},
+if (!localStorage.getItem('sug-planogram-v2-visited')) {
+  localStorage.setItem('sug-planogram-v2-visited','1');
+  renderTutorial();
+} else {
+  closeTutorial();
+}
+renderTutorial();
 
-  // Washers
-  {id:18,name:"M6 Flat Washer DIN125",         barcode:"4901004001",category:"Washers",   packType:"Box 1000pcs", price:6.50,  w:0.10,h:0.05,d:0.08,color:"#d8d86a"},
-  {id:19,name:"M8 Flat Washer DIN125",         barcode:"4901004002",category:"Washers",   packType:"Box 500pcs",  price:7.80,  w:0.12,h:0.06,d:0.09,color:"#c8c85a"},
-  {id:20,name:"M10 Flat Washer DIN125",        barcode:"4901004003",category:"Washers",   packType:"Box 250pcs",  price:9.00,  w:0.13,h:0.06,d:0.10,color:"#b8b84a"},
-  {id:21,name:"M8 Spring Washer DIN127",       barcode:"4901004004",category:"Washers",   packType:"Box 500pcs",  price:8.50,  w:0.12,h:0.06,d:0.09,color:"#e8e87a"},
+// ═══════════════════════════════════════════
+//  PRODUCT DATA — 4 SHELF SETS
+// ═══════════════════════════════════════════
+// zone: 'bag' = ส้มอ่อน (แพ็คถุง), 'box' = ส้มเข้ม (Premium Box), 'acc' = ชมพู (อุปกรณ์เสริม)
+const ZONE_COLORS = {
+  bag: '#f4a460',
+  box: '#d2691e',
+  acc: '#e87090'
+};
 
-  // Anchors
-  {id:22,name:"M8×60 Wedge Anchor",            barcode:"4901005001",category:"Anchors",   packType:"Box 50pcs",   price:28.00, w:0.22,h:0.12,d:0.14,color:"#d86a8a"},
-  {id:23,name:"M10×80 Wedge Anchor",           barcode:"4901005002",category:"Anchors",   packType:"Box 25pcs",   price:35.00, w:0.24,h:0.14,d:0.16,color:"#c85a7a"},
-  {id:24,name:"6×30 Plastic Plug Anchor",      barcode:"4901005003",category:"Anchors",   packType:"Box 500pcs",  price:7.50,  w:0.14,h:0.08,d:0.10,color:"#e87a9a"},
-  {id:25,name:"8×40 Nylon Hammer Anchor",      barcode:"4901005004",category:"Anchors",   packType:"Box 200pcs",  price:18.00, w:0.16,h:0.10,d:0.12,color:"#d86a90"},
-
-  // Rivets & Pins
-  {id:26,name:"4×10mm Blind Rivet Aluminium",  barcode:"4901006001",category:"Rivets",    packType:"Box 1000pcs", price:12.00, w:0.12,h:0.06,d:0.08,color:"#b06ad8"},
-  {id:27,name:"4.8×16mm Blind Rivet Steel",    barcode:"4901006002",category:"Rivets",    packType:"Box 500pcs",  price:15.50, w:0.14,h:0.07,d:0.09,color:"#a05ac8"},
-  {id:28,name:"3×20mm Split Pin",              barcode:"4901006003",category:"Rivets",    packType:"Box 500pcs",  price:6.80,  w:0.10,h:0.05,d:0.07,color:"#c07ae8"},
-
-  // Threaded Rod & Accessories
-  {id:29,name:"M8×1000 Threaded Rod Grade 8.8",barcode:"4901007001",category:"Rods",      packType:"Bundle 10pcs",price:32.00, w:0.10,h:0.10,d:1.02,color:"#6ad8d8"},
-  {id:30,name:"M10×1000 Threaded Rod Grade 4.8",barcode:"4901007002",category:"Rods",     packType:"Bundle 10pcs",price:28.00, w:0.12,h:0.12,d:1.02,color:"#5ac8c8"},
-  {id:31,name:"M12×1000 Threaded Rod Grade 8.8",barcode:"4901007003",category:"Rods",     packType:"Bundle 5pcs", price:38.00, w:0.14,h:0.14,d:1.02,color:"#4ab8b8"},
-
-  // Hooks & Eye Bolts
-  {id:32,name:"M8 Eye Bolt DIN580",            barcode:"4901008001",category:"Specialty", packType:"Box 25pcs",   price:24.00, w:0.15,h:0.08,d:0.10,color:"#d8d06a"},
-  {id:33,name:"6×60mm Hook Bolt",              barcode:"4901008002",category:"Specialty", packType:"Box 50pcs",   price:18.50, w:0.16,h:0.09,d:0.11,color:"#c8c05a"},
-  {id:34,name:"M6 Wing Nut DIN315",            barcode:"4901008003",category:"Specialty", packType:"Box 100pcs",  price:11.00, w:0.12,h:0.06,d:0.08,color:"#e8e07a"},
-  {id:35,name:"M8 Coupling Nut DIN6334",       barcode:"4901008004",category:"Specialty", packType:"Box 50pcs",   price:16.50, w:0.13,h:0.07,d:0.09,color:"#d8d06a"},
+const SHELF_SETS = [
+  {
+    name: 'ชั้นที่ 1 — สกรูปลายสว่าน',
+    nameEn: 'Shelf 1 — Self-drilling Screws',
+    products: [
+      // แพ็คถุง (bag) — ส้มอ่อน
+      {code:'BG-0001',name:'สกรูยึดลอนคู่ #8×1"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:25,qty:1},
+      {code:'BG-0002',name:'สกรูยึดลอนคู่ #8×1.5"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:30,qty:1},
+      {code:'BG-0003',name:'สกรูยึดลอนคู่ #8×2"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:35,qty:1},
+      {code:'BG-0004',name:'สกรูยึดลอนคู่ #10×2"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:35,qty:1},
+      {code:'BG-0005',name:'สกรูยึดลอนคู่ #10×2.5"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:40,qty:1},
+      {code:'BG-0006',name:'สกรูยึดลอนคู่ #10×3"',zone:'bag',pack:'แพ็คถุง 12 ตัว',price:45,qty:1},
+      {code:'BG-0007',name:'สกรูยึดลอนคู่ #12×1.5"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:40,qty:1},
+      {code:'BG-0008',name:'สกรูยึดลอนคู่ #12×2"',zone:'bag',pack:'แพ็คถุง 12 ตัว',price:45,qty:1},
+      {code:'BG-0009',name:'สกรูยึดสังกะสี #8×1"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:28,qty:1},
+      {code:'BG-0010',name:'สกรูยึดสังกะสี #8×1.5"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:32,qty:1},
+      {code:'BG-0011',name:'สกรูยึดสังกะสี #10×2"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:38,qty:1},
+      {code:'BG-0012',name:'สกรูยึดสังกะสี #10×2.5"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:42,qty:1},
+      {code:'BG-0013',name:'สกรูยึดสังกะสี #12×2"',zone:'bag',pack:'แพ็คถุง 12 ตัว',price:48,qty:1},
+      {code:'BG-0014',name:'สกรูยึดกระเบื้อง คอนกรีต #8×1"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:30,qty:1},
+      {code:'BG-0015',name:'สกรูยึดกระเบื้อง คอนกรีต #8×1.5"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:35,qty:1},
+      {code:'BG-0016',name:'สกรูยึดกระเบื้อง คอนกรีต #10×2"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:40,qty:1},
+      {code:'BG-0017',name:'สกรูยึดกระเบื้อง คอนกรีต #10×2.5"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:45,qty:1},
+      {code:'BG-0018',name:'สกรูยึดกระเบื้อง คอนกรีต #10×3"',zone:'bag',pack:'แพ็คถุง 12 ตัว',price:50,qty:1},
+      {code:'BG-0019',name:'สกรูปลายสว่าน หัวแฉก #8×3/4"',zone:'bag',pack:'แพ็คถุง 25 ตัว',price:22,qty:1},
+      {code:'BG-0020',name:'สกรูปลายสว่าน หัวแฉก #8×1"',zone:'bag',pack:'แพ็คถุง 25 ตัว',price:25,qty:1},
+      {code:'BG-0021',name:'สกรูปลายสว่าน หัวแฉก #10×1"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:28,qty:1},
+      {code:'BG-0022',name:'สกรูปลายสว่าน หัวแฉก #10×1.5"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:32,qty:1},
+      {code:'BG-0023',name:'สกรูปลายสว่าน หัวจม #8×3/4"',zone:'bag',pack:'แพ็คถุง 25 ตัว',price:24,qty:1},
+      {code:'BG-0024',name:'สกรูปลายสว่าน หัวจม #8×1"',zone:'bag',pack:'แพ็คถุง 25 ตัว',price:27,qty:1},
+      {code:'BG-0025',name:'สกรูปลายสว่าน หัวจม #10×1.5"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:32,qty:1},
+      // Premium Box — ส้มเข้ม
+      {code:'SS-0001',name:'สกรูยึดลอนคู่ #8×1" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:180,qty:1},
+      {code:'SS-0002',name:'สกรูยึดลอนคู่ #8×1.5" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:210,qty:1},
+      {code:'SS-0003',name:'สกรูยึดลอนคู่ #8×2" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:240,qty:1},
+      {code:'SS-0004',name:'สกรูยึดลอนคู่ #10×2" (Box)',zone:'box',pack:'กล่อง 150 ตัว',price:260,qty:1},
+      {code:'SS-0005',name:'สกรูยึดลอนคู่ #10×2.5" (Box)',zone:'box',pack:'กล่อง 150 ตัว',price:290,qty:1},
+      {code:'SS-0006',name:'สกรูยึดลอนคู่ #10×3" (Box)',zone:'box',pack:'กล่อง 100 ตัว',price:280,qty:1},
+      {code:'SS-0007',name:'สกรูยึดสังกะสี #8×1" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:195,qty:1},
+      {code:'SS-0008',name:'สกรูยึดสังกะสี #8×1.5" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:220,qty:1},
+      {code:'SS-0009',name:'สกรูยึดสังกะสี #10×2" (Box)',zone:'box',pack:'กล่อง 150 ตัว',price:270,qty:1},
+      {code:'SS-0010',name:'สกรูยึดสังกะสี #10×2.5" (Box)',zone:'box',pack:'กล่อง 150 ตัว',price:300,qty:1},
+      {code:'SS-0011',name:'สกรูยึดกระเบื้อง คอนกรีต #8×1" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:210,qty:1},
+      {code:'SS-0012',name:'สกรูยึดกระเบื้อง คอนกรีต #8×1.5" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:240,qty:1},
+      {code:'SS-0013',name:'สกรูยึดกระเบื้อง คอนกรีต #10×2" (Box)',zone:'box',pack:'กล่อง 150 ตัว',price:280,qty:1},
+      {code:'SS-0014',name:'สกรูยึดกระเบื้อง คอนกรีต #10×2.5" (Box)',zone:'box',pack:'กล่อง 150 ตัว',price:310,qty:1},
+      {code:'SS-0015',name:'สกรูปลายสว่าน หัวแฉก #8×3/4" (Box)',zone:'box',pack:'กล่อง 250 ตัว',price:170,qty:1},
+      {code:'SS-0016',name:'สกรูปลายสว่าน หัวแฉก #8×1" (Box)',zone:'box',pack:'กล่อง 250 ตัว',price:190,qty:1},
+      {code:'SS-0017',name:'สกรูปลายสว่าน หัวแฉก #10×1" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:210,qty:1},
+      {code:'SS-0018',name:'สกรูปลายสว่าน หัวจม #8×3/4" (Box)',zone:'box',pack:'กล่อง 250 ตัว',price:175,qty:1},
+      {code:'SS-0019',name:'สกรูปลายสว่าน หัวจม #8×1" (Box)',zone:'box',pack:'กล่อง 250 ตัว',price:195,qty:1},
+      {code:'SS-0020',name:'สกรูปลายสว่าน หัวจม #10×1.5" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:230,qty:1},
+      {code:'SS-0021',name:'สกรูยึดลอนคู่ #12×1.5" (Box)',zone:'box',pack:'กล่อง 150 ตัว',price:290,qty:1},
+      {code:'SS-0022',name:'สกรูยึดลอนคู่ #12×2" (Box)',zone:'box',pack:'กล่อง 100 ตัว',price:310,qty:1},
+      // อุปกรณ์เสริม — ชมพู
+      {code:'AC-0001',name:'เชิงชาย PVC 1.5m',zone:'acc',pack:'เส้น',price:85,qty:1},
+      {code:'AC-0002',name:'เชิงชาย PVC 2m',zone:'acc',pack:'เส้น',price:110,qty:1},
+      {code:'AC-0003',name:'เชิงชาย PVC 3m',zone:'acc',pack:'เส้น',price:155,qty:1},
+    ]
+  },
+  {
+    name: 'ชั้นที่ 2 — สกรูปลายสว่าน (ต่อ)',
+    nameEn: 'Shelf 2 — Self-drilling Screws (cont.)',
+    products: [
+      // แพ็คถุง (bag)
+      {code:'BG-0030',name:'สกรูเวฟโดม #8×1"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:28,qty:1},
+      {code:'BG-0031',name:'สกรูเวฟโดม #8×1.5"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:32,qty:1},
+      {code:'BG-0032',name:'สกรูเวฟโดม #8×2"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:38,qty:1},
+      {code:'BG-0033',name:'สกรูเวฟโดม #10×2"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:38,qty:1},
+      {code:'BG-0034',name:'สกรูเวฟโดม #10×2.5"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:42,qty:1},
+      {code:'BG-0035',name:'สกรูเวฟโดม #10×3"',zone:'bag',pack:'แพ็คถุง 12 ตัว',price:48,qty:1},
+      {code:'BG-0036',name:'สกรูเวฟโดม #12×2"',zone:'bag',pack:'แพ็คถุง 12 ตัว',price:48,qty:1},
+      {code:'BG-0037',name:'สกรูเวฟโดม #12×3"',zone:'bag',pack:'แพ็คถุง 10 ตัว',price:55,qty:1},
+      {code:'BG-0038',name:'สกรูยึดแปสำเร็จ #10×3/4"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:30,qty:1},
+      {code:'BG-0039',name:'สกรูยึดแปสำเร็จ #10×1"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:32,qty:1},
+      {code:'BG-0040',name:'สกรูยึดแปสำเร็จ #12×1"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:38,qty:1},
+      {code:'BG-0041',name:'สกรูยึดแปสำเร็จ #12×1.5"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:42,qty:1},
+      {code:'BG-0042',name:'สกรูยึดแปสำเร็จ #14×1"',zone:'bag',pack:'แพ็คถุง 12 ตัว',price:45,qty:1},
+      {code:'BG-0043',name:'สกรูยึดแปสำเร็จ #14×1.5"',zone:'bag',pack:'แพ็คถุง 12 ตัว',price:50,qty:1},
+      {code:'BG-0044',name:'สกรูเมทัลชีท #8×1/2"',zone:'bag',pack:'แพ็คถุง 25 ตัว',price:22,qty:1},
+      {code:'BG-0045',name:'สกรูเมทัลชีท #8×3/4"',zone:'bag',pack:'แพ็คถุง 25 ตัว',price:25,qty:1},
+      {code:'BG-0046',name:'สกรูเมทัลชีท #10×3/4"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:28,qty:1},
+      {code:'BG-0047',name:'สกรูเมทัลชีท #10×1"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:32,qty:1},
+      {code:'BG-0048',name:'สกรูเมทัลชีท #10×1.5"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:35,qty:1},
+      {code:'BG-0049',name:'สกรูเมทัลชีท #12×1"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:38,qty:1},
+      {code:'BG-0050',name:'สกรูเมทัลชีท #12×1.5"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:42,qty:1},
+      {code:'BG-0051',name:'สกรูเมทัลชีท #12×2"',zone:'bag',pack:'แพ็คถุง 12 ตัว',price:48,qty:1},
+      {code:'BG-0052',name:'สกรูเมทัลชีท แหวน EPDM #8×3/4"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:30,qty:1},
+      {code:'BG-0053',name:'สกรูเมทัลชีท แหวน EPDM #10×1"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:35,qty:1},
+      {code:'BG-0054',name:'สกรูเมทัลชีท แหวน EPDM #10×1.5"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:40,qty:1},
+      {code:'BG-0055',name:'สกรูเมทัลชีท แหวน EPDM #12×1.5"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:45,qty:1},
+      {code:'BG-0056',name:'สกรูเมทัลชีท แหวน EPDM #12×2"',zone:'bag',pack:'แพ็คถุง 12 ตัว',price:50,qty:1},
+      {code:'BG-0057',name:'สกรูเมทัลชีท หัวมน #8×1/2"',zone:'bag',pack:'แพ็คถุง 25 ตัว',price:24,qty:1},
+      {code:'BG-0058',name:'สกรูเมทัลชีท หัวมน #8×3/4"',zone:'bag',pack:'แพ็คถุง 25 ตัว',price:28,qty:1},
+      {code:'BG-0059',name:'สกรูเมทัลชีท หัวมน #10×1"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:32,qty:1},
+      {code:'BG-0060',name:'สกรูเมทัลชีท หัวมน #10×1.5"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:38,qty:1},
+      {code:'BG-0061',name:'สกรูเมทัลชีท หัวมน #12×1.5"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:42,qty:1},
+      // Premium Box
+      {code:'SS-0042',name:'สกรูเวฟโดม #8×1" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:195,qty:1},
+      {code:'SS-0043',name:'สกรูเวฟโดม #8×1.5" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:220,qty:1},
+      {code:'SS-0044',name:'สกรูเวฟโดม #8×2" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:250,qty:1},
+      {code:'SS-0045',name:'สกรูเวฟโดม #10×2" (Box)',zone:'box',pack:'กล่อง 150 ตัว',price:270,qty:1},
+      {code:'SS-0046',name:'สกรูเวฟโดม #10×2.5" (Box)',zone:'box',pack:'กล่อง 150 ตัว',price:295,qty:1},
+      {code:'SS-0047',name:'สกรูเวฟโดม #10×3" (Box)',zone:'box',pack:'กล่อง 100 ตัว',price:290,qty:1},
+      {code:'SS-0048',name:'สกรูยึดแปสำเร็จ #10×3/4" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:210,qty:1},
+      {code:'SS-0049',name:'สกรูยึดแปสำเร็จ #10×1" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:230,qty:1},
+      {code:'SS-0050',name:'สกรูยึดแปสำเร็จ #12×1" (Box)',zone:'box',pack:'กล่อง 150 ตัว',price:260,qty:1},
+      {code:'SS-0051',name:'สกรูยึดแปสำเร็จ #12×1.5" (Box)',zone:'box',pack:'กล่อง 150 ตัว',price:285,qty:1},
+      {code:'SS-0052',name:'สกรูเมทัลชีท #8×1/2" (Box)',zone:'box',pack:'กล่อง 250 ตัว',price:165,qty:1},
+      {code:'SS-0053',name:'สกรูเมทัลชีท #8×3/4" (Box)',zone:'box',pack:'กล่อง 250 ตัว',price:180,qty:1},
+      {code:'SS-0054',name:'สกรูเมทัลชีท #10×3/4" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:200,qty:1},
+      {code:'SS-0055',name:'สกรูเมทัลชีท #10×1" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:220,qty:1},
+      {code:'SS-0056',name:'สกรูเมทัลชีท #10×1.5" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:240,qty:1},
+      {code:'SS-0057',name:'สกรูเมทัลชีท #12×1" (Box)',zone:'box',pack:'กล่อง 150 ตัว',price:255,qty:1},
+      {code:'SS-0058',name:'สกรูเมทัลชีท #12×1.5" (Box)',zone:'box',pack:'กล่อง 150 ตัว',price:280,qty:1},
+      {code:'SS-0059',name:'สกรูเมทัลชีท #12×2" (Box)',zone:'box',pack:'กล่อง 100 ตัว',price:290,qty:1},
+      {code:'SS-0060',name:'สกรูเมทัลชีท แหวน EPDM #8×3/4" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:210,qty:1},
+      {code:'SS-0061',name:'สกรูเมทัลชีท แหวน EPDM #10×1" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:240,qty:1},
+      {code:'SS-0062',name:'สกรูเมทัลชีท แหวน EPDM #10×1.5" (Box)',zone:'box',pack:'กล่อง 150 ตัว',price:265,qty:1},
+      {code:'SS-0063',name:'สกรูเมทัลชีท แหวน EPDM #12×1.5" (Box)',zone:'box',pack:'กล่อง 150 ตัว',price:290,qty:1},
+      {code:'SS-0064',name:'สกรูเมทัลชีท แหวน EPDM #12×2" (Box)',zone:'box',pack:'กล่อง 100 ตัว',price:300,qty:1},
+      {code:'SS-0065',name:'สกรูเมทัลชีท หัวมน #8×1/2" (Box)',zone:'box',pack:'กล่อง 250 ตัว',price:175,qty:1},
+      {code:'SS-0066',name:'สกรูเมทัลชีท หัวมน #8×3/4" (Box)',zone:'box',pack:'กล่อง 250 ตัว',price:195,qty:1},
+      {code:'SS-0067',name:'สกรูเมทัลชีท หัวมน #10×1" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:220,qty:1},
+      {code:'SS-0068',name:'สกรูเมทัลชีท หัวมน #10×1.5" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:250,qty:1},
+      {code:'SS-0069',name:'สกรูเมทัลชีท หัวมน #12×1.5" (Box)',zone:'box',pack:'กล่อง 150 ตัว',price:275,qty:1},
+      {code:'SS-0070',name:'สกรูเวฟโดม #12×2" (Box)',zone:'box',pack:'กล่อง 100 ตัว',price:310,qty:1},
+      {code:'SS-0071',name:'สกรูเวฟโดม #12×3" (Box)',zone:'box',pack:'กล่อง 80 ตัว',price:330,qty:1},
+      // อุปกรณ์เสริม
+      {code:'AC-0004',name:'เชิงชาย PVC ตัวล่าง 1.5m',zone:'acc',pack:'เส้น',price:75,qty:1},
+      {code:'AC-0005',name:'เชิงชาย PVC ตัวล่าง 2m',zone:'acc',pack:'เส้น',price:95,qty:1},
+      {code:'AC-0006',name:'เชิงชาย PVC ตัวล่าง 3m',zone:'acc',pack:'เส้น',price:135,qty:1},
+    ]
+  },
+  {
+    name: 'ชั้นที่ 3 — สกรู FMC / ยึดไม้ฝา / คอลาย',
+    nameEn: 'Shelf 3 — FMC / Siding / Collar Screws',
+    products: [
+      // แพ็คถุง
+      {code:'BG-0070',name:'สกรู FMC #8×3/4"',zone:'bag',pack:'แพ็คถุง 25 ตัว',price:25,qty:1},
+      {code:'BG-0071',name:'สกรู FMC #8×1"',zone:'bag',pack:'แพ็คถุง 25 ตัว',price:28,qty:1},
+      {code:'BG-0072',name:'สกรู FMC #10×1"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:32,qty:1},
+      {code:'BG-0073',name:'สกรู FMC #10×1.5"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:35,qty:1},
+      {code:'BG-0074',name:'สกรู FMC #12×1.5"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:40,qty:1},
+      {code:'BG-0075',name:'สกรู FMC #12×2"',zone:'bag',pack:'แพ็คถุง 12 ตัว',price:45,qty:1},
+      {code:'BG-0076',name:'สกรูยึดไม้ฝา #8×1"',zone:'bag',pack:'แพ็คถุง 25 ตัว',price:22,qty:1},
+      {code:'BG-0077',name:'สกรูยึดไม้ฝา #8×1.5"',zone:'bag',pack:'แพ็คถุง 25 ตัว',price:25,qty:1},
+      {code:'BG-0078',name:'สกรูยึดไม้ฝา #8×2"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:30,qty:1},
+      {code:'BG-0079',name:'สกรูยึดไม้ฝา #10×2"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:35,qty:1},
+      {code:'BG-0080',name:'สกรูยึดไม้ฝา #10×2.5"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:40,qty:1},
+      {code:'BG-0081',name:'สกรูยึดไม้ฝา #10×3"',zone:'bag',pack:'แพ็คถุง 12 ตัว',price:45,qty:1},
+      {code:'BG-0082',name:'สกรูคอลาย #8×3/4"',zone:'bag',pack:'แพ็คถุง 25 ตัว',price:28,qty:1},
+      {code:'BG-0083',name:'สกรูคอลาย #8×1"',zone:'bag',pack:'แพ็คถุง 25 ตัว',price:30,qty:1},
+      {code:'BG-0084',name:'สกรูคอลาย #10×1"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:35,qty:1},
+      {code:'BG-0085',name:'สกรูคอลาย #10×1.5"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:38,qty:1},
+      {code:'BG-0086',name:'สกรูคอลาย #10×2"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:42,qty:1},
+      {code:'BG-0087',name:'สกรูคอลาย #12×1.5"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:42,qty:1},
+      {code:'BG-0088',name:'สกรูไดร์วอร์ #6×1/2"',zone:'bag',pack:'แพ็คถุง 30 ตัว',price:18,qty:1},
+      {code:'BG-0089',name:'สกรูไดร์วอร์ #6×3/4"',zone:'bag',pack:'แพ็คถุง 30 ตัว',price:20,qty:1},
+      {code:'BG-0090',name:'สกรูไดร์วอร์ #6×1"',zone:'bag',pack:'แพ็คถุง 25 ตัว',price:22,qty:1},
+      {code:'BG-0091',name:'สกรูไดร์วอร์ #8×3/4"',zone:'bag',pack:'แพ็คถุง 25 ตัว',price:22,qty:1},
+      {code:'BG-0092',name:'สกรูไดร์วอร์ #8×1"',zone:'bag',pack:'แพ็คถุง 25 ตัว',price:25,qty:1},
+      {code:'BG-0093',name:'สกรูไดร์วอร์ #8×1.5"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:28,qty:1},
+      {code:'BG-0094',name:'สกรูไดร์วอร์ #8×2"',zone:'bag',pack:'แพ็คถุง 20 ตัว',price:32,qty:1},
+      {code:'BG-0095',name:'สกรูไดร์วอร์ #10×1.5"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:32,qty:1},
+      {code:'BG-0096',name:'สกรูไดร์วอร์ #10×2"',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:38,qty:1},
+      {code:'BG-0097',name:'สกรูไดร์วอร์ #10×3"',zone:'bag',pack:'แพ็คถุง 12 ตัว',price:45,qty:1},
+      {code:'BG-0098',name:'สกรูไดร์วอร์ #12×2"',zone:'bag',pack:'แพ็คถุง 12 ตัว',price:45,qty:1},
+      {code:'BG-0099',name:'สกรูไดร์วอร์ #12×3"',zone:'bag',pack:'แพ็คถุง 10 ตัว',price:52,qty:1},
+      // Premium Box
+      {code:'SS-0033',name:'สกรู FMC #8×3/4" (Box)',zone:'box',pack:'กล่อง 250 ตัว',price:180,qty:1},
+      {code:'SS-0034',name:'สกรู FMC #8×1" (Box)',zone:'box',pack:'กล่อง 250 ตัว',price:200,qty:1},
+      {code:'SS-0035',name:'สกรู FMC #10×1" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:220,qty:1},
+      {code:'SS-0036',name:'สกรู FMC #10×1.5" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:240,qty:1},
+      {code:'SS-0037',name:'สกรูยึดไม้ฝา #8×1" (Box)',zone:'box',pack:'กล่อง 250 ตัว',price:165,qty:1},
+      {code:'SS-0038',name:'สกรูยึดไม้ฝา #8×1.5" (Box)',zone:'box',pack:'กล่อง 250 ตัว',price:185,qty:1},
+      {code:'SS-0039',name:'สกรูยึดไม้ฝา #8×2" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:210,qty:1},
+      {code:'SS-0040',name:'สกรูยึดไม้ฝา #10×2" (Box)',zone:'box',pack:'กล่อง 150 ตัว',price:240,qty:1},
+      {code:'SS-0041',name:'สกรูคอลาย #8×3/4" (Box)',zone:'box',pack:'กล่อง 250 ตัว',price:195,qty:1},
+      {code:'SS-0042b',name:'สกรูคอลาย #8×1" (Box)',zone:'box',pack:'กล่อง 250 ตัว',price:210,qty:1},
+      {code:'SS-0043b',name:'สกรูคอลาย #10×1" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:240,qty:1},
+      {code:'SS-0044b',name:'สกรูคอลาย #10×1.5" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:260,qty:1},
+      {code:'SS-0045b',name:'สกรูไดร์วอร์ #6×1/2" (Box)',zone:'box',pack:'กล่อง 300 ตัว',price:140,qty:1},
+      {code:'SS-0046b',name:'สกรูไดร์วอร์ #8×3/4" (Box)',zone:'box',pack:'กล่อง 250 ตัว',price:165,qty:1},
+      {code:'SS-0047b',name:'สกรูไดร์วอร์ #8×1" (Box)',zone:'box',pack:'กล่อง 250 ตัว',price:185,qty:1},
+      {code:'SS-0048b',name:'สกรูไดร์วอร์ #8×1.5" (Box)',zone:'box',pack:'กล่อง 200 ตัว',price:200,qty:1},
+      {code:'SS-0049b',name:'สกรูไดร์วอร์ #10×1.5" (Box)',zone:'box',pack:'กล่อง 150 ตัว',price:220,qty:1},
+      {code:'SS-0050b',name:'สกรูไดร์วอร์ #10×2" (Box)',zone:'box',pack:'กล่อง 150 ตัว',price:250,qty:1},
+      // อุปกรณ์เสริม
+      {code:'AC-0007',name:'แผ่นปิดรอยต่อ ฟอยล์ 50mm×50m',zone:'acc',pack:'ม้วน',price:180,qty:1},
+      {code:'AC-0008',name:'แผ่นปิดรอยต่อ ฟอยล์ 75mm×50m',zone:'acc',pack:'ม้วน',price:250,qty:1},
+      {code:'AC-0009',name:'แผ่นปิดรอยต่อ ฟอยล์ 100mm×50m',zone:'acc',pack:'ม้วน',price:320,qty:1},
+    ]
+  },
+  {
+    name: 'ชั้นที่ 3 — ยึดคอนกรีต / แหวน EPDM',
+    nameEn: 'Shelf 3 — Concrete / EPDM Washers',
+    products: [
+      // แพ็คถุง
+      {code:'BG-0100',name:'สกรูยึดคอนกรีต 6×40mm',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:30,qty:1},
+      {code:'BG-0101',name:'สกรูยึดคอนกรีต 6×50mm',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:35,qty:1},
+      {code:'BG-0102',name:'สกรูยึดคอนกรีต 6×60mm',zone:'bag',pack:'แพ็คถุง 12 ตัว',price:38,qty:1},
+      {code:'BG-0103',name:'สกรูยึดคอนกรีต 6×80mm',zone:'bag',pack:'แพ็คถุง 10 ตัว',price:42,qty:1},
+      {code:'BG-0104',name:'สกรูยึดคอนกรีต 6×100mm',zone:'bag',pack:'แพ็คถุง 8 ตัว',price:48,qty:1},
+      {code:'BG-0105',name:'สกรูยึดคอนกรีต 8×60mm',zone:'bag',pack:'แพ็คถุง 10 ตัว',price:42,qty:1},
+      {code:'BG-0106',name:'สกรูยึดคอนกรีต 8×80mm',zone:'bag',pack:'แพ็คถุง 8 ตัว',price:48,qty:1},
+      {code:'BG-0107',name:'สกรูยึดคอนกรีต 8×100mm',zone:'bag',pack:'แพ็คถุง 6 ตัว',price:55,qty:1},
+      {code:'BG-0108',name:'สกรูยึดคอนกรีต 10×80mm',zone:'bag',pack:'แพ็คถุง 6 ตัว',price:55,qty:1},
+      {code:'BG-0109',name:'สกรูยึดคอนกรีต 10×100mm',zone:'bag',pack:'แพ็คถุง 5 ตัว',price:60,qty:1},
+      {code:'BG-0110',name:'แหวน EPDM 5.5×16mm',zone:'bag',pack:'แพ็คถุง 50 ตัว',price:20,qty:1},
+      {code:'BG-0111',name:'แหวน EPDM 5.5×19mm',zone:'bag',pack:'แพ็คถุง 50 ตัว',price:22,qty:1},
+      {code:'BG-0112',name:'แหวน EPDM 6.3×16mm',zone:'bag',pack:'แพ็คถุง 50 ตัว',price:22,qty:1},
+      {code:'BG-0113',name:'แหวน EPDM 6.3×19mm',zone:'bag',pack:'แพ็คถุง 50 ตัว',price:25,qty:1},
+      {code:'BG-0114',name:'แหวน EPDM 6.3×25mm',zone:'bag',pack:'แพ็คถุง 40 ตัว',price:28,qty:1},
+      {code:'BG-0115',name:'ดอกไขควง PH2×25mm',zone:'bag',pack:'แพ็คถุง 10 ตัว',price:25,qty:1},
+      {code:'BG-0116',name:'ดอกไขควง PH2×50mm',zone:'bag',pack:'แพ็คถุง 10 ตัว',price:30,qty:1},
+      {code:'BG-0117',name:'ดอกไขควง PH2×65mm',zone:'bag',pack:'แพ็คถุง 10 ตัว',price:35,qty:1},
+      {code:'BG-0118',name:'ดอกไขควง PH2×100mm',zone:'bag',pack:'แพ็คถุง 5 ตัว',price:35,qty:1},
+      {code:'BG-0119',name:'ดอกไขควง PH2×150mm',zone:'bag',pack:'แพ็คถุง 5 ตัว',price:42,qty:1},
+      {code:'BG-0120',name:'ดอกไขควง T20×25mm',zone:'bag',pack:'แพ็คถุง 10 ตัว',price:28,qty:1},
+      {code:'BG-0121',name:'ดอกไขควง T25×25mm',zone:'bag',pack:'แพ็คถุง 10 ตัว',price:28,qty:1},
+      {code:'BG-0122',name:'ดอกไขควง T30×25mm',zone:'bag',pack:'แพ็คถุง 10 ตัว',price:30,qty:1},
+      // Premium Box
+      {code:'SS-0072',name:'ปุ๊กเหล็ก 1/4" (Box)',zone:'box',pack:'กล่อง 100 ตัว',price:280,qty:1},
+      {code:'SS-0073',name:'ปุ๊กเหล็ก 3/8" (Box)',zone:'box',pack:'กล่อง 50 ตัว',price:320,qty:1},
+      {code:'SS-0074',name:'ปุ๊กเหล็ก 1/2" (Box)',zone:'box',pack:'กล่อง 25 ตัว',price:350,qty:1},
+      {code:'SS-0075',name:'Drop-In TITAN M6 (Box)',zone:'box',pack:'กล่อง 100 ตัว',price:260,qty:1},
+      {code:'SS-0076',name:'Drop-In TITAN M8 (Box)',zone:'box',pack:'กล่อง 50 ตัว',price:300,qty:1},
+      {code:'SS-0077',name:'Drop-In TITAN M10 (Box)',zone:'box',pack:'กล่อง 25 ตัว',price:340,qty:1},
+      {code:'SS-0078',name:'Drop-In TITAN M12 (Box)',zone:'box',pack:'กล่อง 20 ตัว',price:380,qty:1},
+      // อุปกรณ์เสริม
+      {code:'AC-0010',name:'หัวบล็อค 8mm (1/4" hex)',zone:'acc',pack:'ตัว',price:45,qty:1},
+      {code:'AC-0011',name:'หัวบล็อค 10mm (1/4" hex)',zone:'acc',pack:'ตัว',price:50,qty:1},
+      {code:'AC-0012',name:'หัวบล็อค 13mm (1/4" hex)',zone:'acc',pack:'ตัว',price:55,qty:1},
+      {code:'AC-0013',name:'Magnet Grip Holder',zone:'acc',pack:'ตัว',price:65,qty:1},
+      {code:'AC-0014',name:'Magnet Grip Extension 150mm',zone:'acc',pack:'ตัว',price:85,qty:1},
+    ]
+  },
+  {
+    name: 'ชั้นที่ 4 — ปุ๊กเหล็ก / Drop-In / อุปกรณ์',
+    nameEn: 'Shelf 4 — Anchors / Drop-In / Accessories',
+    products: [
+      // แพ็คถุง
+      {code:'BG-0130',name:'ปุ๊กเหล็ก 1/4"×2"',zone:'bag',pack:'แพ็คถุง 10 ตัว',price:35,qty:1},
+      {code:'BG-0131',name:'ปุ๊กเหล็ก 1/4"×2.5"',zone:'bag',pack:'แพ็คถุง 10 ตัว',price:40,qty:1},
+      {code:'BG-0132',name:'ปุ๊กเหล็ก 1/4"×3"',zone:'bag',pack:'แพ็คถุง 8 ตัว',price:42,qty:1},
+      {code:'BG-0133',name:'ปุ๊กเหล็ก 3/8"×2.5"',zone:'bag',pack:'แพ็คถุง 6 ตัว',price:48,qty:1},
+      {code:'BG-0134',name:'ปุ๊กเหล็ก 3/8"×3"',zone:'bag',pack:'แพ็คถุง 6 ตัว',price:52,qty:1},
+      {code:'BG-0135',name:'ปุ๊กเหล็ก 3/8"×4"',zone:'bag',pack:'แพ็คถุง 4 ตัว',price:58,qty:1},
+      {code:'BG-0136',name:'ปุ๊กเหล็ก 1/2"×3"',zone:'bag',pack:'แพ็คถุง 4 ตัว',price:60,qty:1},
+      {code:'BG-0137',name:'ปุ๊กเหล็ก 1/2"×4"',zone:'bag',pack:'แพ็คถุง 3 ตัว',price:65,qty:1},
+      {code:'BG-0138',name:'ปุ๊กเหล็ก 1/2"×5"',zone:'bag',pack:'แพ็คถุง 3 ตัว',price:72,qty:1},
+      {code:'BG-0139',name:'ปุ๊กเหล็ก 5/8"×4"',zone:'bag',pack:'แพ็คถุง 2 ตัว',price:75,qty:1},
+      {code:'BG-0140',name:'ปุ๊กเหล็ก 5/8"×5"',zone:'bag',pack:'แพ็คถุง 2 ตัว',price:85,qty:1},
+      {code:'BG-0141',name:'Drop-In M6',zone:'bag',pack:'แพ็คถุง 10 ตัว',price:30,qty:1},
+      {code:'BG-0142',name:'Drop-In M8',zone:'bag',pack:'แพ็คถุง 8 ตัว',price:38,qty:1},
+      {code:'BG-0143',name:'Drop-In M10',zone:'bag',pack:'แพ็คถุง 6 ตัว',price:45,qty:1},
+      {code:'BG-0144',name:'Drop-In M12',zone:'bag',pack:'แพ็คถุง 4 ตัว',price:55,qty:1},
+      {code:'BG-0145',name:'พุกตะกั่ว #8',zone:'bag',pack:'แพ็คถุง 15 ตัว',price:18,qty:1},
+      {code:'BG-0146',name:'พุกตะกั่ว #10',zone:'bag',pack:'แพ็คถุง 12 ตัว',price:22,qty:1},
+      {code:'BG-0147',name:'พุกตะกั่ว #12',zone:'bag',pack:'แพ็คถุง 10 ตัว',price:28,qty:1},
+      {code:'BG-0148',name:'สกรูพร้อมพุก #8×1.5"',zone:'bag',pack:'แพ็คถุง 10 ตัว',price:25,qty:1},
+      {code:'BG-0149',name:'สกรูพร้อมพุก #8×2"',zone:'bag',pack:'แพ็คถุง 8 ตัว',price:28,qty:1},
+      {code:'BG-0150',name:'สกรูพร้อมพุก #10×2"',zone:'bag',pack:'แพ็คถุง 8 ตัว',price:32,qty:1},
+      {code:'BG-0151',name:'สกรูพร้อมพุก #10×3"',zone:'bag',pack:'แพ็คถุง 6 ตัว',price:38,qty:1},
+      {code:'BG-0152',name:'ปุ๊กร่ม Toggle Bolt 1/8"',zone:'bag',pack:'แพ็คถุง 6 ตัว',price:35,qty:1},
+      {code:'BG-0153',name:'ปุ๊กร่ม Toggle Bolt 3/16"',zone:'bag',pack:'แพ็คถุง 4 ตัว',price:42,qty:1},
+      {code:'BG-0154',name:'ปุ๊กร่ม Toggle Bolt 1/4"',zone:'bag',pack:'แพ็คถุง 4 ตัว',price:48,qty:1},
+      // Premium Box
+      {code:'SS-0080',name:'ปุ๊กเหล็ก 1/4" (Box) 100pc',zone:'box',pack:'กล่อง 100 ตัว',price:280,qty:1},
+      {code:'SS-0081',name:'ปุ๊กเหล็ก 3/8" (Box) 50pc',zone:'box',pack:'กล่อง 50 ตัว',price:320,qty:1},
+      {code:'SS-0082',name:'ปุ๊กเหล็ก 1/2" (Box) 25pc',zone:'box',pack:'กล่อง 25 ตัว',price:350,qty:1},
+      {code:'SS-0083',name:'ปุ๊กเหล็ก 5/8" (Box) 10pc',zone:'box',pack:'กล่อง 10 ตัว',price:320,qty:1},
+      {code:'SS-0084',name:'Drop-In TITAN M6 (Box) 100pc',zone:'box',pack:'กล่อง 100 ตัว',price:260,qty:1},
+      {code:'SS-0085',name:'Drop-In TITAN M8 (Box) 50pc',zone:'box',pack:'กล่อง 50 ตัว',price:300,qty:1},
+      {code:'SS-0086',name:'Drop-In TITAN M10 (Box) 25pc',zone:'box',pack:'กล่อง 25 ตัว',price:340,qty:1},
+      {code:'SS-0087',name:'Drop-In TITAN M12 (Box) 20pc',zone:'box',pack:'กล่อง 20 ตัว',price:380,qty:1},
+      // อุปกรณ์เสริม
+      {code:'AC-0015',name:'หัวบล็อค 8mm Magnetic',zone:'acc',pack:'ตัว',price:55,qty:1},
+      {code:'AC-0016',name:'หัวบล็อค 10mm Magnetic',zone:'acc',pack:'ตัว',price:60,qty:1},
+      {code:'AC-0017',name:'หัวบล็อค 13mm Magnetic',zone:'acc',pack:'ตัว',price:65,qty:1},
+      {code:'AC-0018',name:'Magnet Grip Universal',zone:'acc',pack:'ตัว',price:75,qty:1},
+      {code:'AC-0019',name:'ชุดดอกไขควง 10 ตัว',zone:'acc',pack:'ชุด',price:120,qty:1},
+      {code:'AC-0020',name:'ชุดดอกไขควง 20 ตัว',zone:'acc',pack:'ชุด',price:210,qty:1},
+    ]
+  }
 ];
 
 // ═══════════════════════════════════════════
-//  THREE.JS SCENE SETUP
+//  APP STATE
+// ═══════════════════════════════════════════
+let activeShelfIdx = 0;
+let selectedProductRef = null; // {shelfIdx, productIdx}
+
+// ═══════════════════════════════════════════
+//  THREE.JS SETUP
 // ═══════════════════════════════════════════
 const canvas = document.getElementById('c');
 const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.setClearColor(0x1a1d23);
+renderer.setClearColor(0x12141a);
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x1a1d23, 8, 25);
+scene.fog = new THREE.Fog(0x12141a, 12, 35);
 
-const camera = new THREE.PerspectiveCamera(50, 1, 0.05, 50);
-camera.position.set(2.5, 1.8, 3.5);
+const camera = new THREE.PerspectiveCamera(45, 1, 0.05, 50);
+camera.position.set(3.5, 3, 6);
 
 const controls = new THREE.OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
-controls.target.set(0.6, 1.1, 0);
-controls.mouseButtons = {LEFT:THREE.MOUSE.LEFT, MIDDLE:THREE.MOUSE.MIDDLE, RIGHT:THREE.MOUSE.RIGHT};
-// We'll handle left-click ourselves; orbit on right-click
-controls.mouseButtons.LEFT = null;
-controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
-controls.mouseButtons.MIDDLE = THREE.MOUSE.PAN;
+controls.target.set(3, 1.1, 0);
+controls.mouseButtons = {LEFT:null, MIDDLE:THREE.MOUSE.PAN, RIGHT:THREE.MOUSE.ROTATE};
 
 // Lights
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-scene.add(ambientLight);
-const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-dirLight.position.set(3, 5, 4);
+scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
+dirLight.position.set(5, 8, 6);
 dirLight.castShadow = true;
-dirLight.shadow.mapSize.set(2048, 2048);
-dirLight.shadow.camera.near = 0.5;
-dirLight.shadow.camera.far = 20;
-dirLight.shadow.camera.left = -5;
-dirLight.shadow.camera.right = 5;
-dirLight.shadow.camera.top = 5;
-dirLight.shadow.camera.bottom = -1;
+dirLight.shadow.mapSize.set(2048,2048);
+dirLight.shadow.camera.near=0.5; dirLight.shadow.camera.far=30;
+dirLight.shadow.camera.left=-10; dirLight.shadow.camera.right=10;
+dirLight.shadow.camera.top=8; dirLight.shadow.camera.bottom=-1;
 scene.add(dirLight);
-scene.add(new THREE.DirectionalLight(0x8899bb, 0.3).translateX(-3).translateY(2).translateZ(-2));
-
-// Floor grid
-const gridHelper = new THREE.GridHelper(20, 40, 0x353a44, 0x2a2e36);
-scene.add(gridHelper);
+scene.add(new THREE.DirectionalLight(0x8899cc,0.3)).position.set(-3,2,-2);
 
 // Floor
-const floorGeo = new THREE.PlaneGeometry(20, 20);
-const floorMat = new THREE.MeshStandardMaterial({color:0x1e2128, roughness:0.9});
-const floor = new THREE.Mesh(floorGeo, floorMat);
-floor.rotation.x = -Math.PI/2;
-floor.position.y = -0.001;
-floor.receiveShadow = true;
-scene.add(floor);
+scene.add(new THREE.GridHelper(20,40,0x2a2e38,0x1e2230));
+const floorMesh = new THREE.Mesh(
+  new THREE.PlaneGeometry(20,20),
+  new THREE.MeshStandardMaterial({color:0x15171e, roughness:0.9})
+);
+floorMesh.rotation.x = -Math.PI/2;
+floorMesh.position.y = -0.001;
+floorMesh.receiveShadow = true;
+scene.add(floorMesh);
 
 // ═══════════════════════════════════════════
-//  SHELF MANAGEMENT
+//  3D SHELF CREATION + PRODUCT PLACEMENT
 // ═══════════════════════════════════════════
-const SHELF_WIDTH = 1.2;   // meters
-const SHELF_HEIGHT = 2.3;
-const SHELF_POST_THICKNESS = 0.04;
+const SHELF_H = 2.3;
+const SHELF_W = 1.2;
+const SHELF_D = 0.45;
+const LEVELS = 9;
+const POST_T = 0.035;
 
-let shelfUnits = [];        // array of shelf unit objects
-let placedProducts = [];    // array of placed product meshes
-let selectedProduct = null; // catalog product currently selected
-let selectedPlaced = null;  // placed product currently selected
-let hoveredPlaced = null;
-let ghostMesh = null;
-let shelfIdCounter = 0;
+const shelfGroups = [];
+const productMeshes = []; // flat array of all product meshes for raycasting
 
-function createShelfUnit(x = 0, z = 0, levels = 5, depth = 0.5, color = 0x777f8e) {
+function createShelfUnit3D(shelfIdx) {
+  const shelfSet = SHELF_SETS[shelfIdx];
+  const x = shelfIdx * (SHELF_W + 0.08);
   const group = new THREE.Group();
-  group.position.set(x, 0, z);
-  const id = shelfIdCounter++;
+  group.position.set(x, 0, 0);
 
-  const postMat = new THREE.MeshStandardMaterial({color, roughness:0.5, metalness:0.6});
-  const shelfMat = new THREE.MeshStandardMaterial({color:0x555d6e, roughness:0.6, metalness:0.4});
+  const postMat = new THREE.MeshStandardMaterial({color:0x555555, roughness:0.5, metalness:0.6});
+  const shelfMat = new THREE.MeshStandardMaterial({color:0x4a4540, roughness:0.55, metalness:0.35});
 
-  // 4 vertical posts
-  const postGeo = new THREE.BoxGeometry(SHELF_POST_THICKNESS, SHELF_HEIGHT, SHELF_POST_THICKNESS);
-  const positions = [
-    [-SHELF_WIDTH/2 + 0.02, SHELF_HEIGHT/2, -depth/2 + 0.02],
-    [SHELF_WIDTH/2 - 0.02, SHELF_HEIGHT/2, -depth/2 + 0.02],
-    [-SHELF_WIDTH/2 + 0.02, SHELF_HEIGHT/2, depth/2 - 0.02],
-    [SHELF_WIDTH/2 - 0.02, SHELF_HEIGHT/2, depth/2 - 0.02],
-  ];
-  positions.forEach(p => {
-    const post = new THREE.Mesh(postGeo, postMat);
-    post.position.set(...p);
-    post.castShadow = true;
-    post.receiveShadow = true;
-    group.add(post);
+  // 4 posts
+  const postGeo = new THREE.BoxGeometry(POST_T, SHELF_H, POST_T);
+  [[-SHELF_W/2+0.02,-SHELF_D/2+0.02],[SHELF_W/2-0.02,-SHELF_D/2+0.02],
+   [-SHELF_W/2+0.02,SHELF_D/2-0.02],[SHELF_W/2-0.02,SHELF_D/2-0.02]].forEach(([px,pz])=>{
+    const p = new THREE.Mesh(postGeo, postMat);
+    p.position.set(px, SHELF_H/2, pz);
+    p.castShadow = true;
+    group.add(p);
   });
 
-  // Shelf platforms
-  const shelfThickness = 0.02;
-  const usableWidth = SHELF_WIDTH - SHELF_POST_THICKNESS * 2 - 0.02;
-  const usableDepth = depth - SHELF_POST_THICKNESS * 2 - 0.02;
-  const shelfGeo = new THREE.BoxGeometry(SHELF_WIDTH - 0.01, shelfThickness, depth - 0.01);
-  const shelfSurfaces = [];
-
-  for (let i = 0; i <= levels; i++) {
-    const y = (i / levels) * (SHELF_HEIGHT - 0.04) + 0.02;
-    const shelf = new THREE.Mesh(shelfGeo, shelfMat.clone());
-    shelf.position.set(0, y, 0);
-    shelf.castShadow = true;
-    shelf.receiveShadow = true;
-    shelf.userData = {isShelfSurface: true, shelfUnitId: id, level: i, y: y + shelfThickness/2};
-    group.add(shelf);
-    shelfSurfaces.push(shelf);
+  // Shelf surfaces
+  const shelfGeo = new THREE.BoxGeometry(SHELF_W-0.01, 0.018, SHELF_D-0.01);
+  for(let i=0; i<=LEVELS; i++){
+    const y = (i/LEVELS)*(SHELF_H-0.04)+0.02;
+    const s = new THREE.Mesh(shelfGeo, shelfMat.clone());
+    s.position.set(0,y,0);
+    s.castShadow=true; s.receiveShadow=true;
+    group.add(s);
   }
 
-  // Back panel (thin)
-  const backGeo = new THREE.BoxGeometry(SHELF_WIDTH - 0.01, SHELF_HEIGHT - 0.02, 0.005);
-  const backMat = new THREE.MeshStandardMaterial({color:0x3a3f4a, roughness:0.8, metalness:0.2, transparent:true, opacity:0.5});
+  // Back panel
+  const backGeo = new THREE.BoxGeometry(SHELF_W-0.01, SHELF_H-0.02, 0.004);
+  const backMat = new THREE.MeshStandardMaterial({color:0x2a2e38, roughness:0.8, transparent:true, opacity:0.45});
   const back = new THREE.Mesh(backGeo, backMat);
-  back.position.set(0, SHELF_HEIGHT/2, -depth/2 + 0.005);
+  back.position.set(0, SHELF_H/2, -SHELF_D/2+0.004);
   group.add(back);
 
-  // Label
-  const labelCanvas = document.createElement('canvas');
-  labelCanvas.width = 256; labelCanvas.height = 64;
-  const ctx2 = labelCanvas.getContext('2d');
-  ctx2.fillStyle = '#23272e';
-  ctx2.fillRect(0,0,256,64);
-  ctx2.fillStyle = '#e4e6ea';
-  ctx2.font = 'bold 24px sans-serif';
-  ctx2.textAlign = 'center';
-  ctx2.fillText(`Shelf Unit ${id + 1}`, 128, 40);
-  const labelTex = new THREE.CanvasTexture(labelCanvas);
-  const labelGeo = new THREE.PlaneGeometry(0.5, 0.12);
-  const labelMat2 = new THREE.MeshBasicMaterial({map:labelTex, transparent:true});
-  const label = new THREE.Mesh(labelGeo, labelMat2);
-  label.position.set(0, SHELF_HEIGHT + 0.1, 0);
-  group.add(label);
+  // Side panels
+  [-1,1].forEach(side=>{
+    const sg = new THREE.BoxGeometry(0.004, SHELF_H-0.02, SHELF_D-0.01);
+    const sm = new THREE.MeshStandardMaterial({color:0x555555, roughness:0.6, metalness:0.4, transparent:true, opacity:0.3});
+    const sp = new THREE.Mesh(sg,sm);
+    sp.position.set(side*(SHELF_W/2-0.002), SHELF_H/2, 0);
+    group.add(sp);
+  });
+
+  // Brand header
+  const headerGeo = new THREE.BoxGeometry(SHELF_W, 0.12, SHELF_D*0.35);
+  const headerMat = new THREE.MeshStandardMaterial({color:0xe8651a, roughness:0.4, metalness:0.3});
+  const header = new THREE.Mesh(headerGeo, headerMat);
+  header.position.set(0, SHELF_H+0.06, 0);
+  header.castShadow = true;
+  group.add(header);
+
+  // Header label
+  const lc = document.createElement('canvas');
+  lc.width=256; lc.height=64;
+  const lctx = lc.getContext('2d');
+  lctx.fillStyle='#e8651a';
+  lctx.fillRect(0,0,256,64);
+  lctx.fillStyle='#fff';
+  lctx.font='bold 26px sans-serif';
+  lctx.textAlign='center';
+  lctx.fillText('SUG', 128, 24);
+  lctx.font='14px sans-serif';
+  lctx.fillText(`Shelf ${shelfIdx+1}`, 128, 50);
+  const ltex = new THREE.CanvasTexture(lc);
+  const labelGeo = new THREE.PlaneGeometry(SHELF_W*0.7, 0.10);
+  const labelMat = new THREE.MeshBasicMaterial({map:ltex, transparent:true});
+  const labelMesh = new THREE.Mesh(labelGeo, labelMat);
+  labelMesh.position.set(0, SHELF_H+0.065, SHELF_D*0.175+0.001);
+  group.add(labelMesh);
+
+  // Zone color strips on side (visual indicator)
+  const bagProducts = shelfSet.products.filter(p=>p.zone==='bag');
+  const boxProducts = shelfSet.products.filter(p=>p.zone==='box');
+  const accProducts = shelfSet.products.filter(p=>p.zone==='acc');
+  const totalProducts = shelfSet.products.length;
+
+  // Calculate level allocation
+  const usableLevels = LEVELS; // levels 0..LEVELS-1 (top of each gap)
+  const bagLevels = Math.max(2, Math.round(usableLevels * bagProducts.length / totalProducts));
+  const accLevels = Math.max(1, Math.min(2, accProducts.length));
+  const boxLevels = usableLevels - bagLevels - accLevels;
+
+  // Place products on shelves
+  placeProductsOnShelf(group, shelfIdx, bagProducts, 'bag', bagLevels + boxLevels + accLevels - 1, bagLevels, x);
+  placeProductsOnShelf(group, shelfIdx, boxProducts, 'box', boxLevels + accLevels - 1, boxLevels, x);
+  placeProductsOnShelf(group, shelfIdx, accProducts, 'acc', accLevels - 1, accLevels, x);
 
   scene.add(group);
-
-  const unit = {id, group, levels, depth, color, x, z, shelfSurfaces, usableWidth, usableDepth};
-  shelfUnits.push(unit);
-  return unit;
+  shelfGroups.push(group);
 }
 
-// Create initial shelf units
-createShelfUnit(0, 0, 5, 0.5);
-createShelfUnit(SHELF_WIDTH + 0.05, 0, 5, 0.5);
-createShelfUnit((SHELF_WIDTH + 0.05)*2, 0, 5, 0.5);
+function placeProductsOnShelf(group, shelfIdx, products, zone, startLevel, numLevels, shelfX) {
+  if(!products.length || numLevels <= 0) return;
 
-function addShelfUnit() {
-  const lastUnit = shelfUnits[shelfUnits.length - 1];
-  const x = lastUnit ? lastUnit.x + SHELF_WIDTH + 0.05 : 0;
-  createShelfUnit(x, 0, 5, 0.5);
-  updateStatus(`Added shelf unit ${shelfUnits.length}`);
+  const zoneColor = new THREE.Color(ZONE_COLORS[zone]);
+  const productsPerLevel = Math.ceil(products.length / numLevels);
+  const boxW = 0.10;
+  const boxD = 0.08;
+  const boxH = 0.065;
+  const gap = 0.005;
+  const maxPerRow = Math.floor((SHELF_W - 0.08) / (boxW + gap));
+
+  let pIdx = 0;
+  for(let lvl = 0; lvl < numLevels && pIdx < products.length; lvl++){
+    const levelIdx = startLevel - lvl;
+    const levelY = (levelIdx / LEVELS) * (SHELF_H - 0.04) + 0.02 + 0.009;
+    const rowCount = Math.min(maxPerRow, products.length - pIdx);
+    const rowWidth = rowCount * (boxW + gap) - gap;
+    const startX = -rowWidth / 2 + boxW / 2;
+
+    for(let col = 0; col < rowCount && pIdx < products.length; col++){
+      const product = products[pIdx];
+      const geo = new THREE.BoxGeometry(boxW, boxH, boxD);
+
+      // Slightly vary the color per product for visual interest
+      const colorVariant = zoneColor.clone();
+      colorVariant.offsetHSL(0, 0, (pIdx % 3 - 1) * 0.04);
+      const mat = new THREE.MeshStandardMaterial({color:colorVariant, roughness:0.55, metalness:0.15});
+      const mesh = new THREE.Mesh(geo, mat);
+
+      mesh.position.set(startX + col * (boxW + gap), levelY + boxH/2, 0);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.userData = {shelfIdx, productIdx: SHELF_SETS[shelfIdx].products.indexOf(product), zone, code: product.code};
+
+      // Front label
+      const lc = document.createElement('canvas');
+      lc.width=128; lc.height=64;
+      const ctx = lc.getContext('2d');
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0,0,128,64);
+      ctx.fillStyle = '#fff';
+      ctx.font = '9px sans-serif';
+      ctx.textAlign = 'center';
+      // Truncate name
+      let displayName = product.name;
+      if(displayName.length > 18) displayName = displayName.substring(0,16) + '..';
+      ctx.fillText(displayName, 64, 28);
+      ctx.font = '8px sans-serif';
+      ctx.fillStyle = '#2ecc71';
+      ctx.fillText('฿'+product.price, 64, 50);
+      const tex = new THREE.CanvasTexture(lc);
+      const faceGeo = new THREE.PlaneGeometry(boxW*0.9, boxH*0.8);
+      const faceMat = new THREE.MeshBasicMaterial({map:tex, transparent:true});
+      const faceMesh = new THREE.Mesh(faceGeo, faceMat);
+      faceMesh.position.set(0, 0, boxD/2+0.001);
+      mesh.add(faceMesh);
+
+      group.add(mesh);
+      productMeshes.push(mesh);
+      pIdx++;
+    }
+  }
 }
 
-// ═══════════════════════════════════════════
-//  PRODUCT PLACEMENT
-// ═══════════════════════════════════════════
-function createProductMesh(product) {
-  const geo = new THREE.BoxGeometry(product.w, product.h, product.d);
-  const mat = new THREE.MeshStandardMaterial({color:product.color, roughness:0.6, metalness:0.2});
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
+// Build all 4 shelves
+for(let i=0; i<SHELF_SETS.length; i++) createShelfUnit3D(i);
 
-  // Label on front face
-  const labelCanvas = document.createElement('canvas');
-  const cw = 256, ch = 128;
-  labelCanvas.width = cw; labelCanvas.height = ch;
-  const ctx = labelCanvas.getContext('2d');
-  ctx.fillStyle = 'rgba(0,0,0,0.65)';
-  ctx.fillRect(0,0,cw,ch);
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 18px sans-serif';
-  ctx.textAlign = 'center';
-  // Wrap name
-  const words = product.name.split(' ');
-  let line = '', lines = [], maxW = cw - 20;
-  words.forEach(w => {
-    const test = line + w + ' ';
-    if (ctx.measureText(test).width > maxW && line) { lines.push(line.trim()); line = w + ' '; }
-    else line = test;
+// ═══════════════════════════════════════════
+//  SIDEBAR — Shelf selector + Product list
+// ═══════════════════════════════════════════
+function renderShelfSelector(){
+  const el = document.getElementById('shelf-selector');
+  el.innerHTML = SHELF_SETS.map((s,i)=>
+    `<button class="shelf-btn ${i===activeShelfIdx?'active':''}" onclick="selectShelf(${i})">ชั้น ${i+1}</button>`
+  ).join('');
+}
+
+function selectShelf(idx){
+  activeShelfIdx = idx;
+  selectedProductRef = null;
+  renderShelfSelector();
+  renderProductList();
+  animateCameraToShelf(idx);
+}
+
+function animateCameraToShelf(idx){
+  const targetX = idx * (SHELF_W + 0.08);
+  const targetPos = {x: targetX + 0.5, y: 2.2, z: 3.5};
+  const targetLook = {x: targetX, y: 1.1, z: 0};
+
+  const startPos = {x: camera.position.x, y: camera.position.y, z: camera.position.z};
+  const startTarget = {x: controls.target.x, y: controls.target.y, z: controls.target.z};
+  const duration = 600;
+  const startTime = Date.now();
+
+  function animateStep(){
+    const t = Math.min(1, (Date.now()-startTime)/duration);
+    const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+    camera.position.set(
+      startPos.x + (targetPos.x-startPos.x)*ease,
+      startPos.y + (targetPos.y-startPos.y)*ease,
+      startPos.z + (targetPos.z-startPos.z)*ease
+    );
+    controls.target.set(
+      startTarget.x + (targetLook.x-startTarget.x)*ease,
+      startTarget.y + (targetLook.y-startTarget.y)*ease,
+      startTarget.z + (targetLook.z-startTarget.z)*ease
+    );
+    controls.update();
+    if(t < 1) requestAnimationFrame(animateStep);
+  }
+  animateStep();
+}
+
+function renderProductList(){
+  const el = document.getElementById('product-list');
+  const shelfSet = SHELF_SETS[activeShelfIdx];
+  const zones = [
+    {key:'bag', label:'ส้มอ่อน — แพ็คถุง SUG (Bag Pack)', color:ZONE_COLORS.bag},
+    {key:'box', label:'ส้มเข้ม — SUG Premium Box', color:ZONE_COLORS.box},
+    {key:'acc', label:'ชมพู — อุปกรณ์เสริม (Accessories)', color:ZONE_COLORS.acc}
+  ];
+  let html = '';
+  zones.forEach(z=>{
+    const prods = shelfSet.products.filter(p=>p.zone===z.key);
+    if(!prods.length) return;
+    html += `<div class="section-header"><div class="section-dot" style="background:${z.color}"></div>${z.label}</div>`;
+    prods.forEach((p,i)=>{
+      const globalIdx = shelfSet.products.indexOf(p);
+      const isSelected = selectedProductRef && selectedProductRef.shelfIdx===activeShelfIdx && selectedProductRef.productIdx===globalIdx;
+      html += `
+        <div class="product-row ${isSelected?'selected':''}" onclick="selectProduct(${activeShelfIdx},${globalIdx})" ondblclick="changeQty(${activeShelfIdx},${globalIdx},1)">
+          <div class="zone-bar" style="background:${z.color}"></div>
+          <div class="p-info">
+            <div class="p-code">${p.code}</div>
+            <div class="p-name" title="${p.name}">${p.name}</div>
+            <div class="p-meta">${p.pack}</div>
+          </div>
+          <div class="p-qty">
+            <button class="qty-btn" onclick="event.stopPropagation();changeQty(${activeShelfIdx},${globalIdx},-1)">−</button>
+            <span class="qty-val">${p.qty}</span>
+            <button class="qty-btn" onclick="event.stopPropagation();changeQty(${activeShelfIdx},${globalIdx},1)">+</button>
+          </div>
+          <div class="p-price">฿${(p.price*p.qty).toLocaleString()}</div>
+        </div>
+      `;
+    });
   });
-  if (line) lines.push(line.trim());
-  const startY = ch/2 - (lines.length - 1) * 12;
-  lines.forEach((l, i) => ctx.fillText(l, cw/2, startY + i * 24));
-  // Price
-  ctx.font = '16px sans-serif';
-  ctx.fillStyle = '#38c76d';
-  ctx.fillText('$' + product.price.toFixed(2), cw/2, ch - 10);
-
-  const tex = new THREE.CanvasTexture(labelCanvas);
-  const labelGeo = new THREE.PlaneGeometry(product.w * 0.95, product.h * 0.95);
-  const labelMat = new THREE.MeshBasicMaterial({map:tex, transparent:true});
-  const labelMesh = new THREE.Mesh(labelGeo, labelMat);
-  labelMesh.position.z = product.d/2 + 0.001;
-  mesh.add(labelMesh);
-
-  mesh.userData = {isProduct: true, product, quantity: 1};
-  return mesh;
+  el.innerHTML = html;
+  updateStats();
 }
 
-function createGhostMesh(product) {
-  const geo = new THREE.BoxGeometry(product.w, product.h, product.d);
-  const mat = new THREE.MeshStandardMaterial({color:product.color, roughness:0.6, transparent:true, opacity:0.45, depthWrite:false});
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.userData = {isGhost: true};
-  return mesh;
+function selectProduct(shelfIdx, productIdx){
+  selectedProductRef = {shelfIdx, productIdx};
+  if(shelfIdx !== activeShelfIdx){
+    activeShelfIdx = shelfIdx;
+    renderShelfSelector();
+  }
+  renderProductList();
+  highlightProduct3D(shelfIdx, productIdx);
 }
 
-function placeProductOnShelf(product, shelfSurface, posX, posZ) {
-  const unit = shelfUnits.find(u => u.id === shelfSurface.userData.shelfUnitId);
-  if (!unit) return;
+function changeQty(shelfIdx, productIdx, delta){
+  const p = SHELF_SETS[shelfIdx].products[productIdx];
+  p.qty = Math.max(0, p.qty + delta);
+  renderProductList();
+  updateOrder();
+}
 
-  const mesh = createProductMesh(product);
-  const worldY = shelfSurface.userData.y + product.h / 2;
-  // Convert posX to local space of shelf group
-  const localX = posX - unit.group.position.x;
-  const localZ = posZ - unit.group.position.z;
-  // Clamp within shelf bounds
-  const halfW = (SHELF_WIDTH - SHELF_POST_THICKNESS*2 - product.w) / 2;
-  const halfD = (unit.depth - SHELF_POST_THICKNESS*2 - product.d) / 2;
-  const cx = Math.max(-halfW, Math.min(halfW, localX));
-  const cz = Math.max(-halfD, Math.min(halfD, localZ));
-
-  mesh.position.set(unit.group.position.x + cx, worldY, unit.group.position.z + cz);
-  mesh.userData.shelfUnitId = unit.id;
-  mesh.userData.shelfLevel = shelfSurface.userData.level;
-  scene.add(mesh);
-  placedProducts.push(mesh);
-  updateOrderPanel();
-  updateStatus(`Placed ${product.name}`);
+function highlightProduct3D(shelfIdx, productIdx){
+  // Reset all highlights
+  productMeshes.forEach(m=>{
+    if(m.userData._originalEmissive !== undefined){
+      m.material.emissive.setHex(m.userData._originalEmissive);
+    }
+  });
+  // Highlight matching mesh
+  productMeshes.forEach(m=>{
+    if(m.userData.shelfIdx===shelfIdx && m.userData.productIdx===productIdx){
+      m.userData._originalEmissive = m.material.emissive.getHex();
+      m.material.emissive.setHex(0x444444);
+    }
+  });
 }
 
 // ═══════════════════════════════════════════
-//  RAYCASTING & INTERACTION
+//  STATS + ORDER
+// ═══════════════════════════════════════════
+function updateStats(){
+  let totalProducts = 0, totalPrice = 0;
+  SHELF_SETS.forEach(s=> s.products.forEach(p=> {
+    if(p.qty > 0){ totalProducts++; totalPrice += p.price * p.qty; }
+  }));
+  document.getElementById('stat-products').textContent = totalProducts;
+  document.getElementById('stat-total').textContent = '฿' + totalPrice.toLocaleString();
+}
+
+function updateOrder(){
+  const tbody = document.getElementById('order-tbody');
+  let html = '', grandTotal = 0;
+  SHELF_SETS.forEach((s,si)=>{
+    s.products.forEach((p,pi)=>{
+      if(p.qty <= 0) return;
+      const subtotal = p.price * p.qty;
+      grandTotal += subtotal;
+      html += `<tr>
+        <td title="${p.name}">${p.name.length>25 ? p.name.substring(0,23)+'..' : p.name}</td>
+        <td style="font-family:monospace;font-size:10px">${p.code}</td>
+        <td class="qty-cell">${p.qty}</td>
+        <td>฿${subtotal.toLocaleString()}</td>
+      </tr>`;
+    });
+  });
+  tbody.innerHTML = html || '<tr><td colspan="4" style="text-align:center;color:var(--text2);padding:20px">ยังไม่มีสินค้า</td></tr>';
+  document.getElementById('order-total').textContent = '฿' + grandTotal.toLocaleString();
+}
+
+function exportCSV(){
+  let csv = 'รหัส,ชื่อสินค้า,บรรจุภัณฑ์,จำนวน,ราคาต่อหน่วย,รวม\n';
+  SHELF_SETS.forEach(s=> s.products.forEach(p=>{
+    if(p.qty <= 0) return;
+    csv += `${p.code},"${p.name}","${p.pack}",${p.qty},${p.price},${p.price*p.qty}\n`;
+  }));
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'sug-planogram-order.csv';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function exportPDF(){
+  window.print();
+}
+
+// ═══════════════════════════════════════════
+//  TAB SWITCHING
+// ═══════════════════════════════════════════
+function switchTab(tab){
+  document.querySelectorAll('.tab-bar button').forEach((b,i)=>{
+    b.classList.toggle('active', (tab==='products' && i===0)||(tab==='order' && i===1));
+  });
+  document.getElementById('tab-products').classList.toggle('active', tab==='products');
+  document.getElementById('tab-order').classList.toggle('active', tab==='order');
+  if(tab==='order') updateOrder();
+}
+
+// ═══════════════════════════════════════════
+//  RAYCASTING — Click/DblClick on 3D products
 // ═══════════════════════════════════════════
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
-const infoTooltip = document.getElementById('info-tooltip');
-const ghostLabel = document.getElementById('ghost-label');
+const tooltip = document.getElementById('info-tooltip');
 
-function getShelfSurfaces() {
-  const surfaces = [];
-  shelfUnits.forEach(u => u.shelfSurfaces.forEach(s => surfaces.push(s)));
-  return surfaces;
-}
-
-function getProductMeshes() {
-  return placedProducts.filter(m => m.parent);
-}
-
-let isDraggingProduct = false;
-let dragTarget = null;
-let dragOffset = new THREE.Vector3();
-
-canvas.addEventListener('mousemove', e => {
-  const rect = canvas.getBoundingClientRect();
-  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
+canvas.addEventListener('click', e=>{
+  updateMouse(e);
   raycaster.setFromCamera(mouse, camera);
-
-  // Dragging placed product
-  if (isDraggingProduct && dragTarget) {
-    const surfaces = getShelfSurfaces();
-    const hits = raycaster.intersectObjects(surfaces);
-    if (hits.length > 0) {
-      const hit = hits[0];
-      const prod = dragTarget.userData.product;
-      const surf = hit.object;
-      const unit = shelfUnits.find(u => u.id === surf.userData.shelfUnitId);
-      if (unit) {
-        const localX = hit.point.x - unit.group.position.x;
-        const localZ = hit.point.z - unit.group.position.z;
-        const halfW = (SHELF_WIDTH - SHELF_POST_THICKNESS*2 - prod.w) / 2;
-        const halfD = (unit.depth - SHELF_POST_THICKNESS*2 - prod.d) / 2;
-        dragTarget.position.x = unit.group.position.x + Math.max(-halfW, Math.min(halfW, localX));
-        dragTarget.position.y = surf.userData.y + prod.h / 2;
-        dragTarget.position.z = unit.group.position.z + Math.max(-halfD, Math.min(halfD, localZ));
-        dragTarget.userData.shelfUnitId = unit.id;
-        dragTarget.userData.shelfLevel = surf.userData.level;
-      }
-    }
-    return;
-  }
-
-  // Ghost preview when placing
-  if (selectedProduct) {
-    const surfaces = getShelfSurfaces();
-    const hits = raycaster.intersectObjects(surfaces);
-    if (hits.length > 0) {
-      const hit = hits[0];
-      const prod = selectedProduct;
-      const surf = hit.object;
-      const unit = shelfUnits.find(u => u.id === surf.userData.shelfUnitId);
-      if (unit) {
-        if (!ghostMesh) {
-          ghostMesh = createGhostMesh(prod);
-          scene.add(ghostMesh);
-        }
-        const localX = hit.point.x - unit.group.position.x;
-        const localZ = hit.point.z - unit.group.position.z;
-        const halfW = (SHELF_WIDTH - SHELF_POST_THICKNESS*2 - prod.w) / 2;
-        const halfD = (unit.depth - SHELF_POST_THICKNESS*2 - prod.d) / 2;
-        ghostMesh.position.x = unit.group.position.x + Math.max(-halfW, Math.min(halfW, localX));
-        ghostMesh.position.y = surf.userData.y + prod.h / 2;
-        ghostMesh.position.z = unit.group.position.z + Math.max(-halfD, Math.min(halfD, localZ));
-        ghostMesh.visible = true;
-        ghostLabel.style.display = 'block';
-        ghostLabel.style.left = (e.clientX + 15) + 'px';
-        ghostLabel.style.top = (e.clientY - 10) + 'px';
-        ghostLabel.textContent = prod.name;
-      }
-    } else {
-      if (ghostMesh) ghostMesh.visible = false;
-      ghostLabel.style.display = 'none';
-    }
-    return;
-  }
-
-  // Hover over placed products
-  const prodMeshes = getProductMeshes();
-  const hits = raycaster.intersectObjects(prodMeshes);
-  if (hits.length > 0) {
-    const m = hits[0].object;
-    if (hoveredPlaced !== m) {
-      if (hoveredPlaced && hoveredPlaced !== selectedPlaced) hoveredPlaced.material.emissive.setHex(0x000000);
-      hoveredPlaced = m;
-      m.material.emissive.setHex(0x222244);
-    }
-    // Show tooltip
-    const p = m.userData.product;
-    infoTooltip.innerHTML = `
-      <div class="it-name">${p.name}</div>
-      <div class="it-row">Barcode: ${p.barcode}</div>
-      <div class="it-row">Pack: ${p.packType}</div>
-      <div class="it-row">Size: ${(p.w*100).toFixed(0)}×${(p.h*100).toFixed(0)}×${(p.d*100).toFixed(0)} cm</div>
-      <div class="it-row">Qty: ${m.userData.quantity}</div>
-      <div class="it-row" style="color:#38c76d;font-weight:700">$${(p.price * m.userData.quantity).toFixed(2)}</div>
-    `;
-    infoTooltip.style.display = 'block';
-    infoTooltip.style.left = (e.clientX + 15) + 'px';
-    infoTooltip.style.top = (e.clientY - 10) + 'px';
-    canvas.style.cursor = 'pointer';
+  const hits = raycaster.intersectObjects(productMeshes, false);
+  if(hits.length){
+    const ud = hits[0].object.userData;
+    selectProduct(ud.shelfIdx, ud.productIdx);
+    showTooltip(e, ud.shelfIdx, ud.productIdx);
   } else {
-    if (hoveredPlaced && hoveredPlaced !== selectedPlaced) hoveredPlaced.material.emissive.setHex(0x000000);
-    hoveredPlaced = null;
-    infoTooltip.style.display = 'none';
-    canvas.style.cursor = selectedProduct ? 'crosshair' : 'default';
-  }
-});
-
-canvas.addEventListener('mousedown', e => {
-  if (e.button !== 0) return; // Only left click
-
-  const rect = canvas.getBoundingClientRect();
-  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-  raycaster.setFromCamera(mouse, camera);
-
-  // If a product is selected from catalog, try to place it
-  if (selectedProduct) {
-    const surfaces = getShelfSurfaces();
-    const hits = raycaster.intersectObjects(surfaces);
-    if (hits.length > 0) {
-      placeProductOnShelf(selectedProduct, hits[0].object, hits[0].point.x, hits[0].point.z);
-    }
-    return;
-  }
-
-  // Try to pick a placed product
-  const prodMeshes = getProductMeshes();
-  const hits = raycaster.intersectObjects(prodMeshes);
-  if (hits.length > 0) {
-    const m = hits[0].object;
-    selectPlacedProduct(m);
-    // Start drag
-    isDraggingProduct = true;
-    dragTarget = m;
-    controls.enabled = false;
-    return;
-  }
-
-  // Clicked empty space => deselect
-  deselectAll();
-});
-
-canvas.addEventListener('mouseup', e => {
-  if (isDraggingProduct) {
-    isDraggingProduct = false;
-    dragTarget = null;
-    controls.enabled = true;
-  }
-});
-
-canvas.addEventListener('mouseleave', () => {
-  infoTooltip.style.display = 'none';
-  ghostLabel.style.display = 'none';
-  if (ghostMesh) ghostMesh.visible = false;
-});
-
-// Double-click to increment quantity
-canvas.addEventListener('dblclick', e => {
-  const rect = canvas.getBoundingClientRect();
-  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-  raycaster.setFromCamera(mouse, camera);
-  const hits = raycaster.intersectObjects(getProductMeshes());
-  if (hits.length > 0) {
-    hits[0].object.userData.quantity++;
-    updateOrderPanel();
-    updateStatus(`Quantity: ${hits[0].object.userData.quantity}`);
-  }
-});
-
-// Keyboard
-document.addEventListener('keydown', e => {
-  if (e.key === 'Delete' || e.key === 'Backspace') {
-    if (selectedPlaced && document.activeElement.tagName !== 'INPUT') {
-      e.preventDefault();
-      deleteSelected();
-    }
-  }
-  if (e.key === 'Escape') {
-    deselectAll();
-  }
-  if (e.key === '+' || e.key === '=') {
-    if (selectedPlaced) { selectedPlaced.userData.quantity++; updateOrderPanel(); }
-  }
-  if (e.key === '-' || e.key === '_') {
-    if (selectedPlaced && selectedPlaced.userData.quantity > 1) { selectedPlaced.userData.quantity--; updateOrderPanel(); }
-  }
-});
-
-function selectPlacedProduct(mesh) {
-  deselectPlaced();
-  selectedPlaced = mesh;
-  mesh.material.emissive.setHex(0x334466);
-  const p = mesh.userData.product;
-  updateStatus(`Selected: ${p.name} | Qty: ${mesh.userData.quantity} | +/- to change qty | Del to remove`);
-}
-
-function deselectPlaced() {
-  if (selectedPlaced) {
-    selectedPlaced.material.emissive.setHex(0x000000);
-    selectedPlaced = null;
-  }
-}
-
-function deselectAll() {
-  deselectPlaced();
-  selectedProduct = null;
-  if (ghostMesh) { scene.remove(ghostMesh); ghostMesh = null; }
-  ghostLabel.style.display = 'none';
-  document.querySelectorAll('.product-card.selected').forEach(c => c.classList.remove('selected'));
-  canvas.style.cursor = 'default';
-  updateStatus('Click a product then click on shelf to place. Right-drag to rotate. Scroll to zoom.');
-}
-
-function deleteSelected() {
-  if (!selectedPlaced) return;
-  scene.remove(selectedPlaced);
-  placedProducts = placedProducts.filter(m => m !== selectedPlaced);
-  selectedPlaced = null;
-  updateOrderPanel();
-  updateStatus('Product removed');
-}
-
-function clearAllProducts() {
-  placedProducts.forEach(m => scene.remove(m));
-  placedProducts = [];
-  selectedPlaced = null;
-  updateOrderPanel();
-  updateStatus('All products cleared');
-}
-
-// ═══════════════════════════════════════════
-//  SIDEBAR: PRODUCT CATALOG
-// ═══════════════════════════════════════════
-const productList = document.getElementById('product-list');
-const searchInput = document.getElementById('search');
-const categoryFilter = document.getElementById('category-filter');
-
-// Populate categories
-const categories = [...new Set(PRODUCTS.map(p => p.category))].sort();
-categories.forEach(c => {
-  const opt = document.createElement('option');
-  opt.value = c; opt.textContent = c;
-  categoryFilter.appendChild(opt);
-});
-
-function renderProductList() {
-  const query = searchInput.value.toLowerCase();
-  const cat = categoryFilter.value;
-  productList.innerHTML = '';
-
-  const filtered = PRODUCTS.filter(p => {
-    if (cat && p.category !== cat) return false;
-    if (query && !p.name.toLowerCase().includes(query) && !p.barcode.includes(query)) return false;
-    return true;
-  });
-
-  filtered.forEach(p => {
-    const card = document.createElement('div');
-    card.className = 'product-card';
-    if (selectedProduct && selectedProduct.id === p.id) card.classList.add('selected');
-    card.innerHTML = `
-      <div class="p-name">${p.name}</div>
-      <div class="p-meta">${p.barcode} &bull; ${p.packType} &bull; ${p.category}</div>
-      <div class="p-price">$${p.price.toFixed(2)}</div>
-      <div class="p-size">${(p.w*100).toFixed(0)}×${(p.h*100).toFixed(0)}×${(p.d*100).toFixed(0)} cm</div>
-    `;
-    card.addEventListener('click', () => {
-      deselectPlaced();
-      if (selectedProduct && selectedProduct.id === p.id) {
-        deselectAll();
-        return;
+    tooltip.style.display='none';
+    selectedProductRef = null;
+    renderProductList();
+    productMeshes.forEach(m=>{
+      if(m.userData._originalEmissive !== undefined){
+        m.material.emissive.setHex(m.userData._originalEmissive);
+        delete m.userData._originalEmissive;
       }
-      selectedProduct = p;
-      if (ghostMesh) { scene.remove(ghostMesh); ghostMesh = null; }
-      document.querySelectorAll('.product-card.selected').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-      canvas.style.cursor = 'crosshair';
-      updateStatus(`Selected: ${p.name} — Click on a shelf to place`);
     });
-    productList.appendChild(card);
-  });
-}
-
-searchInput.addEventListener('input', renderProductList);
-categoryFilter.addEventListener('change', renderProductList);
-renderProductList();
-
-// ═══════════════════════════════════════════
-//  ORDER PANEL
-// ═══════════════════════════════════════════
-function updateOrderPanel() {
-  const orderItems = document.getElementById('order-items');
-  const orderTotal = document.getElementById('order-total');
-
-  // Aggregate by product id
-  const agg = {};
-  placedProducts.forEach(m => {
-    if (!m.parent) return;
-    const p = m.userData.product;
-    if (!agg[p.id]) agg[p.id] = {product: p, totalQty: 0, totalPrice: 0};
-    agg[p.id].totalQty += m.userData.quantity;
-    agg[p.id].totalPrice += p.price * m.userData.quantity;
-  });
-
-  let html = '';
-  let grandTotal = 0;
-  Object.values(agg).forEach(item => {
-    grandTotal += item.totalPrice;
-    html += `<div class="order-item">
-      <span class="oi-name">${item.product.name}</span>
-      <span class="oi-qty">×${item.totalQty}</span>
-      <span class="oi-price">$${item.totalPrice.toFixed(2)}</span>
-    </div>`;
-  });
-  orderItems.innerHTML = html || '<div style="color:var(--text2);font-size:12px;padding:8px 0">No products placed yet</div>';
-  orderTotal.textContent = '$' + grandTotal.toFixed(2);
-}
-updateOrderPanel();
-
-// ═══════════════════════════════════════════
-//  SHELF CONFIG
-// ═══════════════════════════════════════════
-let configTarget = null;
-
-function openShelfConfig() {
-  document.getElementById('shelf-config').style.display = 'block';
-  const unit = shelfUnits[shelfUnits.length - 1];
-  if (unit) {
-    document.getElementById('cfg-levels').value = unit.levels;
-    document.getElementById('cfg-depth').value = unit.depth;
   }
+});
+
+canvas.addEventListener('dblclick', e=>{
+  updateMouse(e);
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(productMeshes, false);
+  if(hits.length){
+    const ud = hits[0].object.userData;
+    changeQty(ud.shelfIdx, ud.productIdx, 1);
+  }
+});
+
+canvas.addEventListener('mousemove', e=>{
+  updateMouse(e);
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(productMeshes, false);
+  canvas.style.cursor = hits.length ? 'pointer' : 'default';
+});
+
+function updateMouse(e){
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left)/rect.width)*2-1;
+  mouse.y = -((e.clientY - rect.top)/rect.height)*2+1;
 }
-function closeShelfConfig() { document.getElementById('shelf-config').style.display = 'none'; }
 
-function applyShelfConfig() {
-  const levels = parseInt(document.getElementById('cfg-levels').value) || 5;
-  const depth = parseFloat(document.getElementById('cfg-depth').value) || 0.5;
-  const colorHex = document.getElementById('cfg-color').value;
-  const color = parseInt(colorHex.replace('#',''), 16);
-
-  // Rebuild all shelf units with new config
-  // Remove old units but keep products
-  shelfUnits.forEach(u => scene.remove(u.group));
-  const oldUnits = [...shelfUnits];
-  shelfUnits = [];
-  shelfIdCounter = 0;
-  oldUnits.forEach((u, i) => {
-    createShelfUnit(u.x, u.z, levels, depth, color);
-  });
-
-  closeShelfConfig();
-  updateStatus(`Shelves updated: ${levels} levels, ${depth}m depth`);
+function showTooltip(e, shelfIdx, productIdx){
+  const p = SHELF_SETS[shelfIdx].products[productIdx];
+  const zoneName = {bag:'แพ็คถุง (Bag Pack)', box:'Premium Box', acc:'อุปกรณ์เสริม (Accessories)'}[p.zone];
+  tooltip.innerHTML = `
+    <div class="it-name">${p.name}</div>
+    <div class="it-row"><b>รหัส:</b> ${p.code}</div>
+    <div class="it-row"><b>ประเภท:</b> ${zoneName}</div>
+    <div class="it-row"><b>บรรจุภัณฑ์:</b> ${p.pack}</div>
+    <div class="it-row"><b>ราคา:</b> <span style="color:var(--green)">฿${p.price}</span></div>
+    <div class="it-row"><b>จำนวน:</b> ${p.qty}</div>
+  `;
+  tooltip.style.display='block';
+  const x = Math.min(e.clientX - document.getElementById('sidebar').offsetWidth + 10, canvas.offsetWidth - 240);
+  const y = Math.min(e.clientY - 60, canvas.offsetHeight - 180);
+  tooltip.style.left = Math.max(10,x)+'px';
+  tooltip.style.top = Math.max(10,y)+'px';
 }
 
 // ═══════════════════════════════════════════
-//  SAVE / LOAD
+//  KEYBOARD
 // ═══════════════════════════════════════════
-function saveLayout() {
-  const data = {
-    shelfUnits: shelfUnits.map(u => ({x:u.x, z:u.z, levels:u.levels, depth:u.depth, color:u.color})),
-    products: placedProducts.filter(m => m.parent).map(m => ({
-      productId: m.userData.product.id,
-      quantity: m.userData.quantity,
-      x: m.position.x,
-      y: m.position.y,
-      z: m.position.z,
-      shelfUnitId: m.userData.shelfUnitId,
-      shelfLevel: m.userData.shelfLevel
-    }))
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'planogram-layout.json'; a.click();
-  URL.revokeObjectURL(url);
-  updateStatus('Layout saved');
-}
-
-function loadLayout() {
-  const input = document.createElement('input');
-  input.type = 'file'; input.accept = '.json';
-  input.onchange = e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      try {
-        const data = JSON.parse(ev.target.result);
-        // Clear current
-        placedProducts.forEach(m => scene.remove(m));
-        placedProducts = [];
-        shelfUnits.forEach(u => scene.remove(u.group));
-        shelfUnits = [];
-        shelfIdCounter = 0;
-
-        // Recreate shelves
-        data.shelfUnits.forEach(u => createShelfUnit(u.x, u.z, u.levels, u.depth, u.color));
-
-        // Recreate products
-        data.products.forEach(pd => {
-          const product = PRODUCTS.find(p => p.id === pd.productId);
-          if (!product) return;
-          const mesh = createProductMesh(product);
-          mesh.position.set(pd.x, pd.y, pd.z);
-          mesh.userData.quantity = pd.quantity || 1;
-          mesh.userData.shelfUnitId = pd.shelfUnitId;
-          mesh.userData.shelfLevel = pd.shelfLevel;
-          scene.add(mesh);
-          placedProducts.push(mesh);
-        });
-
-        updateOrderPanel();
-        updateStatus('Layout loaded');
-      } catch(err) {
-        updateStatus('Error loading layout: ' + err.message);
+document.addEventListener('keydown', e=>{
+  if(!selectedProductRef) return;
+  const {shelfIdx, productIdx} = selectedProductRef;
+  if(e.key==='+' || e.key==='=') changeQty(shelfIdx, productIdx, 1);
+  if(e.key==='-') changeQty(shelfIdx, productIdx, -1);
+  if(e.key==='Delete' || e.key==='Backspace'){
+    SHELF_SETS[shelfIdx].products[productIdx].qty = 0;
+    renderProductList();
+  }
+  if(e.key==='Escape'){
+    selectedProductRef = null;
+    tooltip.style.display='none';
+    renderProductList();
+    productMeshes.forEach(m=>{
+      if(m.userData._originalEmissive !== undefined){
+        m.material.emissive.setHex(m.userData._originalEmissive);
+        delete m.userData._originalEmissive;
       }
-    };
-    reader.readAsText(file);
-  };
-  input.click();
-}
+    });
+  }
+});
 
-function exportOrder() {
-  const agg = {};
-  placedProducts.forEach(m => {
-    if (!m.parent) return;
-    const p = m.userData.product;
-    if (!agg[p.id]) agg[p.id] = {product: p, totalQty: 0, totalPrice: 0};
-    agg[p.id].totalQty += m.userData.quantity;
-    agg[p.id].totalPrice += p.price * m.userData.quantity;
-  });
-
-  let csv = 'Product Name,Barcode,Pack Type,Quantity,Unit Price,Total Price\n';
-  let grandTotal = 0;
-  Object.values(agg).forEach(item => {
-    grandTotal += item.totalPrice;
-    csv += `"${item.product.name}",${item.product.barcode},"${item.product.packType}",${item.totalQty},${item.product.price.toFixed(2)},${item.totalPrice.toFixed(2)}\n`;
-  });
-  csv += `\n,,,,Grand Total,$${grandTotal.toFixed(2)}\n`;
-
-  const blob = new Blob([csv], {type:'text/csv'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'order-summary.csv'; a.click();
-  URL.revokeObjectURL(url);
-  updateStatus('Order exported as CSV');
+// ═══════════════════════════════════════════
+//  CAMERA RESET
+// ═══════════════════════════════════════════
+function resetCamera(){
+  animateCameraToShelf(activeShelfIdx);
 }
 
 // ═══════════════════════════════════════════
-//  STATUS BAR
+//  RENDER LOOP + RESIZE
 // ═══════════════════════════════════════════
-function updateStatus(msg) {
-  document.getElementById('status-bar').textContent = msg;
-}
-
-// ═══════════════════════════════════════════
-//  RENDER LOOP
-// ═══════════════════════════════════════════
-function resize() {
+function onResize(){
   const wrap = document.getElementById('canvas-wrap');
   const w = wrap.clientWidth, h = wrap.clientHeight;
   renderer.setSize(w, h);
-  camera.aspect = w / h;
+  camera.aspect = w/h;
   camera.updateProjectionMatrix();
 }
-window.addEventListener('resize', resize);
-resize();
+window.addEventListener('resize', onResize);
 
-function animate() {
+function animate(){
   requestAnimationFrame(animate);
   controls.update();
   renderer.render(scene, camera);
 }
+
+// Init
+onResize();
+renderShelfSelector();
+renderProductList();
+updateStats();
 animate();
 </script>
 </body>
