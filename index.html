@@ -46,6 +46,14 @@ html,body{height:100%;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
 .shelf-btn:hover{border-color:var(--accent);color:var(--text)}
 .shelf-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
 
+/* Search box */
+.search-box{padding:8px 10px;border-bottom:1px solid var(--border)}
+.search-box input{width:100%;padding:8px 10px 8px 30px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;outline:none;transition:.15s}
+.search-box input:focus{border-color:var(--accent)}
+.search-box{position:relative}
+.search-box::before{content:'⌕';position:absolute;left:18px;top:50%;transform:translateY(-50%);color:var(--text2);font-size:14px;pointer-events:none}
+.no-results{padding:20px;text-align:center;color:var(--text2);font-size:12px}
+
 /* Product list */
 .section-header{padding:8px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
 .section-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
@@ -147,6 +155,7 @@ canvas{display:block;width:100%;height:100%}
 
     <div id="tab-products" class="tab-content active">
       <div class="shelf-selector" id="shelf-selector"></div>
+      <div class="search-box"><input type="text" id="product-search" placeholder="ค้นหาสินค้า... (Search products)" oninput="onSearchInput(this.value)"></div>
       <div id="product-list"></div>
     </div>
 
@@ -633,6 +642,7 @@ const SHELF_SETS = [
 // ═══════════════════════════════════════════
 let activeShelfIdx = 0;
 let selectedProductRef = null; // {shelfIdx, productIdx}
+let searchQuery = '';
 
 // ═══════════════════════════════════════════
 //  THREE.JS SETUP
@@ -899,6 +909,11 @@ function animateCameraToShelf(idx){
   animateStep();
 }
 
+function onSearchInput(val){
+  searchQuery = val.trim().toLowerCase();
+  renderProductList();
+}
+
 function renderProductList(){
   const el = document.getElementById('product-list');
   const shelfSet = SHELF_SETS[activeShelfIdx];
@@ -908,9 +923,14 @@ function renderProductList(){
     {key:'acc', label:'ชมพู — อุปกรณ์เสริม (Accessories)', color:ZONE_COLORS.acc}
   ];
   let html = '';
+  let totalMatches = 0;
   zones.forEach(z=>{
-    const prods = shelfSet.products.filter(p=>p.zone===z.key);
+    let prods = shelfSet.products.filter(p=>p.zone===z.key);
+    if(searchQuery){
+      prods = prods.filter(p=> p.name.toLowerCase().includes(searchQuery) || p.code.toLowerCase().includes(searchQuery));
+    }
     if(!prods.length) return;
+    totalMatches += prods.length;
     html += `<div class="section-header"><div class="section-dot" style="background:${z.color}"></div>${z.label}</div>`;
     prods.forEach((p,i)=>{
       const globalIdx = shelfSet.products.indexOf(p);
@@ -933,6 +953,9 @@ function renderProductList(){
       `;
     });
   });
+  if(searchQuery && totalMatches === 0){
+    html = '<div class="no-results">ไม่พบสินค้า — No products found</div>';
+  }
   el.innerHTML = html;
   updateStats();
 }
